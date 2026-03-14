@@ -522,16 +522,19 @@ namespace GamePrince
             double totalWeekHours = 0;
             foreach (var task in _tasks)
             {
+                double taskHours = 0;
                 if (task.LastTimerStart != null && DateTime.TryParse(task.LastTimerStart, out DateTime timerStart))
                 {
                     var timerDate = timerStart.Date;
                     if (timerDate >= startDate && timerDate <= endDate)
                     {
                         dailyHours[timerDate] += (DateTime.Now - timerStart).TotalHours;
-                        totalWeekHours += (DateTime.Now - timerStart).TotalHours;
+                        taskHours += (DateTime.Now - timerStart).TotalHours;
                     }
                 }
-                totalWeekHours += task.LoggedHours;
+                // Only add logged hours if there are any recorded hours
+                if (taskHours > 0 || task.LoggedHours > 0)
+                    totalWeekHours += taskHours + task.LoggedHours;
             }
 
             // Summary
@@ -634,11 +637,10 @@ namespace GamePrince
         {
             var border = new Border
             {
-                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e293b")),
-                CornerRadius = new CornerRadius(12),
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#334155")),
+                CornerRadius = new CornerRadius(4),
                 Padding = new Thickness(15),
                 Margin = new Thickness(0, 0, 0, 12),
-                Effect = (System.Windows.Media.Effects.DropShadowEffect)FindResource("cardShadow")
             };
 
             var stack = new StackPanel();

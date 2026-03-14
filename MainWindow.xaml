@@ -4,43 +4,76 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Game Prince" Height="750" Width="1150"
+        Title="Game Prince" Height="750" Width="1200"
         Background="#0f172a" WindowStartupLocation="CenterScreen"
-        FontFamily="Segoe UI Semibold">
+        FontFamily="Segoe UI">
     
     <Window.Resources>
-        <DropShadowEffect x:Key="cardShadow" BlurRadius="15" ShadowDepth="2" Opacity="0.3" Color="Black"/>
+        <!-- 扁平风格 - 无阴影效果 -->
         
-        <!-- Glassmorphism Styles -->
+        <!-- 卡片样式 (扁平风格) -->
         <Style x:Key="GlassBorder" TargetType="Border">
-            <Setter Property="Background" Value="#1e293b99"/> <!-- Low opacity background -->
-            <Setter Property="BorderBrush" Value="#ffffff22"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="Background" Value="#1e293b"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="16"/>
         </Style>
 
-        <Style x:Key="NavButton" TargetType="Button">
+        <!-- 任务卡片样式 (扁平风格) -->
+        <Style x:Key="TaskCard" TargetType="Border">
+            <Setter Property="Background" Value="#1e293b"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#283548"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- 统计数字样式 -->
+        <Style x:Key="StatNumber" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="36"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+
+        <!-- 统计标签样式 -->
+        <Style x:Key="StatLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#94a3b8"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Margin" Value="0,0,0,5"/>
+        </Style>
+
+        <!-- 搜索框样式 (扁平风格) -->
+        <Style x:Key="SearchBoxStyle" TargetType="Border">
+            <Setter Property="Background" Value="#1e293b"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="12,8"/>
+        </Style>
+
+        <!-- 图标按钮样式 (扁平风格) -->
+        <Style x:Key="IconButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="#94a3b8"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Padding" Value="15,10"/>
-            <Setter Property="Margin" Value="0,5"/>
             <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="FontSize" Value="16"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="HorizontalContentAlignment" Value="Left"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="8" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        <Border x:Name="border" Background="{TemplateBinding Background}" 
+                                CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#334155"/>
-                                <Setter Property="Foreground" Value="White"/>
-                            </Trigger>
-                            <Trigger Property="Tag" Value="Active">
-                                <Setter Property="Background" Value="#8b5cf6"/>
+                                <Setter TargetName="border" Property="Background" Value="#334155"/>
                                 <Setter Property="Foreground" Value="White"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -48,87 +81,86 @@
                 </Setter.Value>
             </Setter>
         </Style>
-
-        <Style x:Key="PremiumButtonStyle" TargetType="Button">
-             <Setter Property="Background" Value="#8b5cf6"/>
-             <Setter Property="Foreground" Value="White"/>
-             <Setter Property="BorderThickness" Value="0"/>
-             <Setter Property="Padding" Value="15,8"/>
-             <Setter Property="Cursor" Value="Hand"/>
-             <Setter Property="Template">
-                 <Setter.Value>
-                     <ControlTemplate TargetType="Button">
-                         <Border Background="{TemplateBinding Background}" CornerRadius="10">
-                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                         </Border>
-                     </ControlTemplate>
-                 </Setter.Value>
-             </Setter>
-        </Style>
     </Window.Resources>
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="260"/>
+            <ColumnDefinition Width="280"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
         <!-- Sidebar -->
-        <Border Grid.Column="0" Background="#111827" BorderBrush="#1f2937" BorderThickness="0,0,1,0">
+        <Border Grid.Column="0" Background="#111827">
             <DockPanel LastChildFill="True">
-                <StackPanel DockPanel.Dock="Top" Margin="30,40,30,40">
-                    <TextBlock Text="GAME PRINCE" Foreground="#a78bfa" FontSize="22" FontWeight="ExtraBold">
-                        <TextBlock.Effect>
-                            <DropShadowEffect BlurRadius="10" Color="#8b5cf6" Opacity="0.5" ShadowDepth="0"/>
-                        </TextBlock.Effect>
-                    </TextBlock>
-                    <TextBlock Text="DEV WORKSPACE" Foreground="#64748b" FontSize="10" FontWeight="Bold" Margin="0,5,0,0"/>
+                <!-- Logo区域 -->
+                <StackPanel DockPanel.Dock="Top" Margin="25,35,25,35">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="GAME" Foreground="White" FontSize="24" FontWeight="ExtraBold"/>
+                        <TextBlock Text=" PRINCE" Foreground="#8b5cf6" FontSize="24" FontWeight="ExtraBold"/>
+                    </StackPanel>
+                    <TextBlock Text="DEV WORKSPACE" Foreground="#475569" FontSize="10" FontWeight="Bold" Margin="0,6,0,0"/>
                 </StackPanel>
 
-                <StackPanel DockPanel.Dock="Bottom" Margin="20" VerticalAlignment="Bottom">
-                    <Button Content="⚙ 设置" Style="{StaticResource NavButton}"/>
-                    <Button Content="👤 个人中心" Style="{StaticResource NavButton}"/>
+                <!-- 底部设置区域 -->
+                <StackPanel DockPanel.Dock="Bottom" Margin="20,0,20,20" VerticalAlignment="Bottom">
+                    <Border Height="1" Background="#1e293b" Margin="0,0,0,15"/>
+                    <Button Content="⚙  设置" Style="{StaticResource NavButtonStyle}"/>
+                    <Button Content="👤 个人中心" Style="{StaticResource NavButtonStyle}"/>
                 </StackPanel>
 
-                <StackPanel Margin="15,0">
-                    <Button x:Name="NavProjectOverview" Content="📊 项目概览" Style="{StaticResource NavButton}" Click="ShowProjectOverview"/>
-                    <Button x:Name="NavKanban" Content="📋 任务看板" Style="{StaticResource NavButton}" Click="ShowKanban"/>
-                    <Button x:Name="NavPlan" Content="📅 开发计划" Style="{StaticResource NavButton}" Click="ShowPlan"/>
-                    <Button x:Name="NavHeatmap" Content="🔥 活跃热力图" Style="{StaticResource NavButton}" Click="ShowHeatmap"/>
-                    <Button x:Name="NavListView" Content="📝 任务列表" Style="{StaticResource NavButton}" Click="ShowListView"/>
-                    <Button x:Name="NavCalendar" Content="🗓️ 日历视图" Style="{StaticResource NavButton}" Click="ShowCalendar"/>
-                    <Button x:Name="NavWeeklyReport" Content="⏱️ 工时周报" Style="{StaticResource NavButton}" Click="ShowWeeklyReport"/>
-                </StackPanel>
+                <!-- 主导航 -->
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="15,0">
+                    <StackPanel>
+                        <TextBlock Text="导航" Foreground="#475569" FontSize="11" FontWeight="SemiBold" Margin="15,10,0,10"/>
+                        <Button x:Name="NavProjectOverview" Content="📊 项目概览" Style="{StaticResource NavButtonStyle}" Click="ShowProjectOverview"/>
+                        <Button x:Name="NavKanban" Content="📋 任务看板" Style="{StaticResource NavButtonStyle}" Click="ShowKanban"/>
+                        <Button x:Name="NavPlan" Content="📅 开发计划" Style="{StaticResource NavButtonStyle}" Click="ShowPlan"/>
+                        <Button x:Name="NavHeatmap" Content="🔥 活跃热力图" Style="{StaticResource NavButtonStyle}" Click="ShowHeatmap"/>
+                        <Button x:Name="NavListView" Content="📝 任务列表" Style="{StaticResource NavButtonStyle}" Click="ShowListView"/>
+                        <Button x:Name="NavCalendar" Content="🗓️ 日历视图" Style="{StaticResource NavButtonStyle}" Click="ShowCalendar"/>
+                        <Button x:Name="NavWeeklyReport" Content="⏱️ 工时周报" Style="{StaticResource NavButtonStyle}" Click="ShowWeeklyReport"/>
+                    </StackPanel>
+                </ScrollViewer>
             </DockPanel>
         </Border>
 
         <!-- Main Content -->
-        <Grid Grid.Column="1" Margin="40">
+        <Grid Grid.Column="1" Margin="35">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
+            <!-- 顶部标题栏 -->
             <DockPanel Grid.Row="0" Margin="0,0,0,30">
                 <StackPanel>
-                    <TextBlock x:Name="TitleText" Text="任务看板" Foreground="White" FontSize="32" FontWeight="Bold"/>
-                    <TextBlock x:Name="ProjectNameText" Text="未选择项目" Foreground="#64748b" FontSize="14" Margin="0,5,0,0"/>
+                    <TextBlock x:Name="TitleText" Text="任务看板" Foreground="White" FontSize="28" FontWeight="Bold"/>
+                    <TextBlock x:Name="ProjectNameText" Text="未选择项目" Foreground="#64748b" FontSize="14" Margin="0,6,0,0"/>
                 </StackPanel>
                 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <!-- Search Box -->
-                    <Border Background="#1e293b" CornerRadius="10" Margin="0,0,20,0" Padding="10,5">
+                    <!-- 搜索框 -->
+                    <Border Style="{StaticResource SearchBoxStyle}" Margin="0,0,20,0">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="🔍" Foreground="#64748b" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                            <TextBox x:Name="SearchBox" Width="200" Background="Transparent" BorderThickness="0" Foreground="White" CaretBrush="White" VerticalAlignment="Center" TextChanged="SearchBox_TextChanged"/>
+                            <TextBlock Text="🔍" Foreground="#64748b" VerticalAlignment="Center" Margin="0,0,10,0" FontSize="14"/>
+                            <TextBox x:Name="SearchBox" Width="220" Background="Transparent" BorderThickness="0" 
+                                     Foreground="White" CaretBrush="White" VerticalAlignment="Center" 
+                                     TextChanged="SearchBox_TextChanged" FontSize="14"/>
                         </StackPanel>
                     </Border>
 
-                    <Button Content="选择项目" Click="SelectProject_Click" Style="{StaticResource PremiumButtonStyle}"/>
+                    <Button Content="选择项目" Click="SelectProject_Click" Style="{StaticResource PrimaryButtonStyle}"/>
                     
-                    <StackPanel Margin="20,0,0,0" VerticalAlignment="Center">
-                        <TextBlock x:Name="StatsText" Text="提交总数: 0" Foreground="#94a3b8" FontSize="12"/>
-                        <TextBlock x:Name="BranchText" Text="分支: -" Foreground="#06b6d4" FontSize="12" Margin="0,2,0,0"/>
+                    <!-- Git统计 -->
+                    <StackPanel Margin="25,0,0,0" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="📂" Foreground="#64748b" FontSize="12" Margin="0,0,6,0"/>
+                            <TextBlock x:Name="BranchText" Text="分支: -" Foreground="#06b6d4" FontSize="12"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <TextBlock Text="📜" Foreground="#64748b" FontSize="12" Margin="0,0,6,0"/>
+                            <TextBlock x:Name="StatsText" Text="提交: 0" Foreground="#94a3b8" FontSize="12"/>
+                        </StackPanel>
                     </StackPanel>
                 </StackPanel>
             </DockPanel>
@@ -137,8 +169,8 @@
             <Grid x:Name="ProjectOverviewView" Grid.Row="1" Visibility="Collapsed">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
-                        <!-- Summary Cards -->
-                        <Grid Margin="0,0,0,30">
+                        <!-- 统计卡片 -->
+                        <Grid Margin="0,0,0,25">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
@@ -146,59 +178,85 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             
-                            <Border Grid.Column="0" Style="{StaticResource GlassBorder}" Margin="0,0,10,0" Padding="20">
+                            <Border Grid.Column="0" Style="{StaticResource GlassBorder}" Margin="0,0,8,0">
                                 <StackPanel>
-                                    <TextBlock Text="总任务" Foreground="#94a3b8" FontSize="12"/>
-                                    <TextBlock x:Name="OverviewTotalTasks" Text="0" Foreground="White" FontSize="32" FontWeight="Bold"/>
+                                    <TextBlock Text="总任务" Style="{StaticResource StatLabel}"/>
+                                    <TextBlock x:Name="OverviewTotalTasks" Text="0" Style="{StaticResource StatNumber}"/>
+                                    <TextBlock Text="↑ 全部任务" Foreground="#475569" FontSize="11" Margin="0,8,0,0"/>
                                 </StackPanel>
                             </Border>
                             
-                            <Border Grid.Column="1" Style="{StaticResource GlassBorder}" Margin="5,0,5,0" Padding="20">
+                            <Border Grid.Column="1" Style="{StaticResource GlassBorder}" Margin="4,0,4,0">
                                 <StackPanel>
-                                    <TextBlock Text="进行中" Foreground="#94a3b8" FontSize="12"/>
-                                    <TextBlock x:Name="OverviewInProgress" Text="0" Foreground="#f59e0b" FontSize="32" FontWeight="Bold"/>
+                                    <TextBlock Text="进行中" Style="{StaticResource StatLabel}"/>
+                                    <TextBlock x:Name="OverviewInProgress" Text="0" Style="{StaticResource StatNumber}" Foreground="#f59e0b"/>
+                                    <TextBlock Text="↻ 进行中" Foreground="#475569" FontSize="11" Margin="0,8,0,0"/>
                                 </StackPanel>
                             </Border>
                             
-                            <Border Grid.Column="2" Style="{StaticResource GlassBorder}" Margin="5,0,5,0" Padding="20">
+                            <Border Grid.Column="2" Style="{StaticResource GlassBorder}" Margin="4,0,4,0">
                                 <StackPanel>
-                                    <TextBlock Text="已完成" Foreground="#94a3b8" FontSize="12"/>
-                                    <TextBlock x:Name="OverviewCompleted" Text="0" Foreground="#10b981" FontSize="32" FontWeight="Bold"/>
+                                    <TextBlock Text="已完成" Style="{StaticResource StatLabel}"/>
+                                    <TextBlock x:Name="OverviewCompleted" Text="0" Style="{StaticResource StatNumber}" Foreground="#10b981"/>
+                                    <TextBlock Text="✓ 已完成" Foreground="#475569" FontSize="11" Margin="0,8,0,0"/>
                                 </StackPanel>
                             </Border>
                             
-                            <Border Grid.Column="3" Style="{StaticResource GlassBorder}" Margin="10,0,0,0" Padding="20">
+                            <Border Grid.Column="3" Style="{StaticResource GlassBorder}" Margin="8,0,0,0">
                                 <StackPanel>
-                                    <TextBlock Text="里程碑" Foreground="#94a3b8" FontSize="12"/>
-                                    <TextBlock x:Name="OverviewMilestones" Text="0" Foreground="#8b5cf6" FontSize="32" FontWeight="Bold"/>
+                                    <TextBlock Text="里程碑" Style="{StaticResource StatLabel}"/>
+                                    <TextBlock x:Name="OverviewMilestones" Text="0" Style="{StaticResource StatNumber}" Foreground="#8b5cf6"/>
+                                    <TextBlock Text="🎯 里程碑" Foreground="#475569" FontSize="11" Margin="0,8,0,0"/>
                                 </StackPanel>
                             </Border>
                         </Grid>
                         
-                        <!-- Project Info -->
-                        <Border Style="{StaticResource GlassBorder}" Padding="25" Margin="0,0,0,20">
+                        <!-- 项目信息 -->
+                        <Border Style="{StaticResource GlassBorder}" Margin="0,0,0,20">
                             <DockPanel>
-                                <TextBlock Text="项目信息" Foreground="White" FontSize="18" FontWeight="Bold" DockPanel.Dock="Top" Margin="0,0,0,15"/>
+                                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,20">
+                                    <TextBlock Text="📁" Foreground="#8b5cf6" FontSize="20" Margin="0,0,10,0"/>
+                                    <TextBlock Text="项目信息" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                                </StackPanel>
                                 <StackPanel>
                                     <TextBlock x:Name="OverviewProjectName" Text="未选择项目" Foreground="#a78bfa" FontSize="16" FontWeight="Bold"/>
-                                    <TextBlock x:Name="OverviewProjectPath" Text="" Foreground="#64748b" FontSize="12" Margin="0,5,0,0"/>
-                                    <TextBlock x:Name="OverviewGitStats" Text="Git提交: 0 | 分支: -" Foreground="#94a3b8" FontSize="12" Margin="0,10,0,0"/>
+                                    <TextBlock x:Name="OverviewProjectPath" Text="" Foreground="#64748b" FontSize="12" Margin="0,8,0,0"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                        <Border Background="#1e293b" CornerRadius="6" Padding="10,6" Margin="0,0,10,0">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="git" Foreground="#f05032" FontWeight="Bold" FontSize="12"/>
+                                                <TextBlock x:Name="OverviewGitStats" Text=" 0 commits" Foreground="#94a3b8" FontSize="12" Margin="5,0,0,0"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <Border Background="#1e293b" CornerRadius="6" Padding="10,6">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="🌿" Foreground="#06b6d4" FontSize="12"/>
+                                                <TextBlock x:Name="OverviewBranchDisplay" Text=" -" Foreground="#06b6d4" FontSize="12" Margin="5,0,0,0"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </StackPanel>
                                 </StackPanel>
                             </DockPanel>
                         </Border>
                         
-                        <!-- Recent Tasks -->
-                        <Border Style="{StaticResource GlassBorder}" Padding="25" Margin="0,0,0,20">
+                        <!-- 最近任务 -->
+                        <Border Style="{StaticResource GlassBorder}" Margin="0,0,0,20">
                             <DockPanel>
-                                <TextBlock Text="最近任务" Foreground="White" FontSize="18" FontWeight="Bold" DockPanel.Dock="Top" Margin="0,0,0,15"/>
+                                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,20">
+                                    <TextBlock Text="📋" Foreground="#8b5cf6" FontSize="20" Margin="0,0,10,0"/>
+                                    <TextBlock Text="最近任务" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                                </StackPanel>
                                 <StackPanel x:Name="OverviewRecentTasks"/>
                             </DockPanel>
                         </Border>
                         
-                        <!-- Upcoming Milestones -->
-                        <Border Style="{StaticResource GlassBorder}" Padding="25">
+                        <!-- 即将到期 -->
+                        <Border Style="{StaticResource GlassBorder}">
                             <DockPanel>
-                                <TextBlock Text="即将到期" Foreground="White" FontSize="18" FontWeight="Bold" DockPanel.Dock="Top" Margin="0,0,0,15"/>
+                                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,20">
+                                    <TextBlock Text="⏰" Foreground="#f59e0b" FontSize="20" Margin="0,0,10,0"/>
+                                    <TextBlock Text="即将到期" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                                </StackPanel>
                                 <StackPanel x:Name="OverviewUpcomingMilestones"/>
                             </DockPanel>
                         </Border>
@@ -214,12 +272,15 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 
-                <!-- Task Pool -->
-                <Border Grid.Column="0" Style="{StaticResource GlassBorder}" Margin="0,0,10,0" Padding="20">
+                <!-- 任务池 -->
+                <Border Grid.Column="0" Style="{StaticResource GlassBorder}" Margin="0,0,8,0">
                     <DockPanel LastChildFill="True">
                         <DockPanel DockPanel.Dock="Top" Margin="0,0,0,20">
-                            <TextBlock Text="任务池" Foreground="White" FontSize="18" FontWeight="Bold"/>
-                            <Button Content="+" Click="AddTask_Click" HorizontalAlignment="Right" Background="Transparent" Foreground="#94a3b8" BorderThickness="0" FontSize="24" Cursor="Hand"/>
+                            <StackPanel Orientation="Horizontal">
+                                <Border Background="#6366f1" CornerRadius="6" Width="8" Height="8" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="任务池" Foreground="White" FontSize="16" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <Button Content="+" Click="AddTask_Click" HorizontalAlignment="Right" Style="{StaticResource IconButton}" FontSize="20" FontWeight="Bold"/>
                         </DockPanel>
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                             <StackPanel x:Name="TaskPoolList"/>
@@ -227,20 +288,26 @@
                     </DockPanel>
                 </Border>
 
-                <!-- In Progress -->
-                <Border Grid.Column="1" Style="{StaticResource GlassBorder}" Margin="5,0,5,0" Padding="20">
+                <!-- 进行中 -->
+                <Border Grid.Column="1" Style="{StaticResource GlassBorder}" Margin="4,0,4,0">
                     <DockPanel LastChildFill="True">
-                        <TextBlock DockPanel.Dock="Top" Text="正在进行" Foreground="White" FontSize="18" FontWeight="Bold" Margin="0,0,0,20"/>
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,20">
+                            <Border Background="#f59e0b" CornerRadius="6" Width="8" Height="8" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="正在进行" Foreground="White" FontSize="16" FontWeight="SemiBold"/>
+                        </StackPanel>
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                             <StackPanel x:Name="InProgressList"/>
                         </ScrollViewer>
                     </DockPanel>
                 </Border>
 
-                <!-- Completed -->
-                <Border Grid.Column="2" Style="{StaticResource GlassBorder}" Margin="10,0,0,0" Padding="20">
+                <!-- 已完成 -->
+                <Border Grid.Column="2" Style="{StaticResource GlassBorder}" Margin="8,0,0,0">
                     <DockPanel LastChildFill="True">
-                        <TextBlock DockPanel.Dock="Top" Text="已完成" Foreground="White" FontSize="18" FontWeight="Bold" Margin="0,0,0,20"/>
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,20">
+                            <Border Background="#10b981" CornerRadius="6" Width="8" Height="8" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="已完成" Foreground="White" FontSize="16" FontWeight="SemiBold"/>
+                        </StackPanel>
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                             <StackPanel x:Name="CompletedList"/>
                         </ScrollViewer>
@@ -257,18 +324,22 @@
 
             <!-- Heatmap View -->
             <Grid x:Name="HeatmapView" Grid.Row="1" Visibility="Collapsed">
-                <Border Background="#1e293b" CornerRadius="20" Padding="30" Effect="{StaticResource cardShadow}" VerticalAlignment="Top">
+                <Border Style="{StaticResource GlassBorder}" VerticalAlignment="Top">
                     <StackPanel>
-                        <DockPanel Margin="0,0,0,20">
-                            <TextBlock Text="项目开发活跃度 (过去 365 天)" Foreground="White" FontSize="18" FontWeight="Bold"/>
+                        <DockPanel Margin="0,0,0,25">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🔥" Foreground="#f59e0b" FontSize="20" Margin="0,0,10,0"/>
+                                <TextBlock Text="项目开发活跃度" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                                <TextBlock Text=" (过去 365 天)" Foreground="#64748b" FontSize="14" VerticalAlignment="Bottom" Margin="5,0,0,2"/>
+                            </StackPanel>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                <TextBlock Text="Less" Foreground="#64748b" FontSize="10" Margin="0,0,5,0"/>
-                                <Rectangle Width="10" Height="10" Fill="#1e293b" Margin="2,0"/>
-                                <Rectangle Width="10" Height="10" Fill="#4c1d95" Margin="2,0"/>
-                                <Rectangle Width="10" Height="10" Fill="#7c3aed" Margin="2,0"/>
-                                <Rectangle Width="10" Height="10" Fill="#a78bfa" Margin="2,0"/>
-                                <Rectangle Width="10" Height="10" Fill="#ddd6fe" Margin="2,0"/>
-                                <TextBlock Text="More" Foreground="#64748b" FontSize="10" Margin="5,0,0,0"/>
+                                <TextBlock Text="Less" Foreground="#64748b" FontSize="11" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                <Rectangle Width="12" Height="12" Fill="#1e293b" Margin="2,0" RadiusX="2" RadiusY="2"/>
+                                <Rectangle Width="12" Height="12" Fill="#4c1d95" Margin="2,0" RadiusX="2" RadiusY="2"/>
+                                <Rectangle Width="12" Height="12" Fill="#7c3aed" Margin="2,0" RadiusX="2" RadiusY="2"/>
+                                <Rectangle Width="12" Height="12" Fill="#a78bfa" Margin="2,0" RadiusX="2" RadiusY="2"/>
+                                <Rectangle Width="12" Height="12" Fill="#ddd6fe" Margin="2,0" RadiusX="2" RadiusY="2"/>
+                                <TextBlock Text="More" Foreground="#64748b" FontSize="11" Margin="8,0,0,0" VerticalAlignment="Center"/>
                             </StackPanel>
                         </DockPanel>
                         
@@ -278,18 +349,21 @@
                             </UniformGrid>
                         </ScrollViewer>
                         
-                        <TextBlock x:Name="HeatmapTip" Text="提示：这是你在当前选定项目中的提交足迹。" Foreground="#64748b" FontSize="12" Margin="0,20,0,0" FontStyle="Italic"/>
+                        <TextBlock x:Name="HeatmapTip" Text="提示：这是你在当前选定项目中的提交足迹。" Foreground="#475569" FontSize="12" Margin="0,20,0,0" FontStyle="Italic"/>
                     </StackPanel>
                 </Border>
             </Grid>
 
             <!-- List View -->
             <Grid x:Name="TaskListViewGrid" Grid.Row="1" Visibility="Collapsed">
-                <Border Background="#1e293b" CornerRadius="20" Padding="30" Effect="{StaticResource cardShadow}">
+                <Border Style="{StaticResource GlassBorder}">
                     <DockPanel>
-                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,20">
-                            <TextBlock Text="任务列表" Foreground="White" FontSize="18" FontWeight="Bold"/>
-                            <Button Content="+ 添加任务" Click="AddTask_Click" HorizontalAlignment="Right" Style="{StaticResource PremiumButtonStyle}"/>
+                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,25">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📝" Foreground="#8b5cf6" FontSize="20" Margin="0,0,10,0"/>
+                                <TextBlock Text="任务列表" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <Button Content="+ 添加任务" Click="AddTask_Click" HorizontalAlignment="Right" Style="{StaticResource PrimaryButtonStyle}"/>
                         </DockPanel>
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
                             <StackPanel x:Name="TaskListContainer"/>
@@ -300,14 +374,17 @@
 
             <!-- Calendar View -->
             <Grid x:Name="CalendarViewGrid" Grid.Row="1" Visibility="Collapsed">
-                <Border Background="#1e293b" CornerRadius="20" Padding="30" Effect="{StaticResource cardShadow}">
+                <Border Style="{StaticResource GlassBorder}">
                     <DockPanel>
-                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,20">
-                            <TextBlock Text="日历视图" Foreground="White" FontSize="18" FontWeight="Bold"/>
+                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,25">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🗓️" Foreground="#8b5cf6" FontSize="20" Margin="0,0,10,0"/>
+                                <TextBlock Text="日历视图" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                            </StackPanel>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                <Button Content="◀" Click="PrevMonth" Background="Transparent" Foreground="White" BorderThickness="0" Padding="10,5" Cursor="Hand"/>
-                                <TextBlock x:Name="CalendarMonthText" Text="" Foreground="White" FontSize="16" VerticalAlignment="Center" Margin="10,0"/>
-                                <Button Content="▶" Click="NextMonth" Background="Transparent" Foreground="White" BorderThickness="0" Padding="10,5" Cursor="Hand"/>
+                                <Button Content="◀" Click="PrevMonth" Style="{StaticResource IconButton}" FontSize="18"/>
+                                <TextBlock x:Name="CalendarMonthText" Text="" Foreground="White" FontSize="16" VerticalAlignment="Center" Margin="15,0"/>
+                                <Button Content="▶" Click="NextMonth" Style="{StaticResource IconButton}" FontSize="18"/>
                             </StackPanel>
                         </DockPanel>
                         <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -319,9 +396,12 @@
 
             <!-- Weekly Report View -->
             <Grid x:Name="WeeklyReportViewGrid" Grid.Row="1" Visibility="Collapsed">
-                <Border Background="#1e293b" CornerRadius="20" Padding="30" Effect="{StaticResource cardShadow}">
+                <Border Style="{StaticResource GlassBorder}">
                     <StackPanel>
-                        <TextBlock Text="个人工时周报" Foreground="White" FontSize="18" FontWeight="Bold" Margin="0,0,0,20"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,25">
+                            <TextBlock Text="⏱️" Foreground="#8b5cf6" FontSize="20" Margin="0,0,10,0"/>
+                            <TextBlock Text="个人工时周报" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                        </StackPanel>
                         <StackPanel x:Name="WeeklyReportContainer"/>
                     </StackPanel>
                 </Border>
