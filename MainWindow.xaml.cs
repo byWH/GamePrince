@@ -1079,9 +1079,20 @@ namespace GamePrince
 
             var outerStack = new StackPanel();
 
-            var dock = new DockPanel();
+            // 1. 定义主 Grid 布局 (2行 x 3列)
+            var mainGrid = new Grid();
+            
+            // 列定义：左(自适应拉伸) | 中(根据内容/固定宽度自适应) | 右(根据按钮自适应)
+            mainGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            mainGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            mainGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-            var infoStack = new StackPanel();
+            // 行定义：第一排内容 | 第二排图表
+            mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+            // ================= 左侧：信息面板 =================
+            var infoStack = new StackPanel { Margin = new Thickness(0, 0, 10, 0) }; // 添加少许右侧边距防止贴得太紧
             var titleText = new TextBlock { Text = milestone.Title, Foreground = Brushes.White, FontSize = 18, FontWeight = FontWeights.Bold };
             var versionText = new TextBlock { Text = $"版本: {milestone.Version}", Foreground = Brushes.Cyan, FontSize = 12, Margin = new Thickness(0, 5, 0, 5) };
             var descText = new TextBlock { Text = milestone.Description, Foreground = Brushes.Gray, FontSize = 14, TextWrapping = TextWrapping.Wrap };
@@ -1092,9 +1103,11 @@ namespace GamePrince
             infoStack.Children.Add(descText);
             infoStack.Children.Add(dateText);
 
-            dock.Children.Add(infoStack);
+            Grid.SetRow(infoStack, 0);
+            Grid.SetColumn(infoStack, 0);
+            mainGrid.Children.Add(infoStack);
 
-            // Progress and Task Distribution (Right Side)
+            // ================= 中间：进度面板 =================
             var tasksInMilestone = _tasks.Where(t => t.MilestoneId == milestone.Id).ToList();
             int total = tasksInMilestone.Count;
             int completed = tasksInMilestone.Count(t => t.Status == "Completed");
@@ -1102,7 +1115,7 @@ namespace GamePrince
             int taskPool = tasksInMilestone.Count(t => t.Status == "Task Pool");
             double progress = total == 0 ? 0 : (double)completed / total * 100;
 
-            var progressStack = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(20, 10, 0, 10), Width = 150 };
+            var progressStack = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(20, 10, 20, 10), Width = 150 };
 
             var progressText = new TextBlock
             {
@@ -1150,8 +1163,12 @@ namespace GamePrince
             legend.Children.Add(new TextBlock { Text = $"■ 池 {taskPool}", Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#64748b")), FontSize = 9 });
             progressStack.Children.Add(legend);
 
-            // Buttons inside progress stack
-            var btnPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 15, 0, 0) };
+            Grid.SetRow(progressStack, 0);
+            Grid.SetColumn(progressStack, 1);
+            mainGrid.Children.Add(progressStack);
+
+            // ================= 右侧：按钮面板 =================
+            var btnPanel = new StackPanel { Orientation = Orientation.Vertical, VerticalAlignment = VerticalAlignment.Center };
 
             var btnViewTasks = new Button
             {
@@ -1219,19 +1236,28 @@ namespace GamePrince
             btnPanel.Children.Add(btnViewTasks);
             btnPanel.Children.Add(btnEdit);
             btnPanel.Children.Add(btnDelete);
-            progressStack.Children.Add(btnPanel);
 
-            // Add Burndown Chart into progress stack
+            Grid.SetRow(btnPanel, 0);
+            Grid.SetColumn(btnPanel, 2);
+            mainGrid.Children.Add(btnPanel);
+
+            // ================= 底部：燃尽图 =================
             var chart = CreateBurndownChart(milestone, tasksInMilestone);
             if (chart != null)
             {
-                progressStack.Children.Add(chart);
+                // 加一个 Grid 或 Border 作为容器，方便控制与上方内容的间距
+                var bottomContainer = new Grid { Margin = new Thickness(0, 15, 0, 0) };
+                bottomContainer.Children.Add(chart);
+
+                Grid.SetRow(bottomContainer, 1);       // 放在第二排
+                Grid.SetColumn(bottomContainer, 0);    // 从第一列开始
+                Grid.SetColumnSpan(bottomContainer, 3); // 跨越全部三列，保证填满底部
+
+                mainGrid.Children.Add(bottomContainer);
             }
 
-            DockPanel.SetDock(progressStack, Dock.Right);
-            dock.Children.Add(progressStack);
-
-            border.Child = dock;
+            // 组合并返回
+            border.Child = mainGrid;
             outerStack.Children.Add(border);
 
             return outerStack;
