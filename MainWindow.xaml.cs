@@ -1077,72 +1077,67 @@ namespace GamePrince
             
             dock.Children.Add(infoStack);
 
-            // Progress Bar
+            // Progress and Task Distribution (Right Side)
             var tasksInMilestone = _tasks.Where(t => t.MilestoneId == milestone.Id).ToList();
             int total = tasksInMilestone.Count;
             int completed = tasksInMilestone.Count(t => t.Status == "Completed");
+            int inProgress = tasksInMilestone.Count(t => t.Status == "In Progress");
+            int taskPool = tasksInMilestone.Count(t => t.Status == "Task Pool");
             double progress = total == 0 ? 0 : (double)completed / total * 100;
 
-            var progressStack = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(20, 10, 0, 10) };
-            var progressText = new TextBlock { Text = $"{progress:F0}%\n({completed}/{total})", Foreground = Brushes.White, FontSize = 11, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 5), TextAlignment = TextAlignment.Center };
-            var progressBar = new ProgressBar { Height = 6, Value = progress, Maximum = 100, Width = 100, Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#334155")), Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8b5cf6")), BorderThickness = new Thickness(0) };
+            var progressStack = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(20, 10, 0, 10), Width = 150 };
             
+            var progressText = new TextBlock 
+            { 
+                Text = $"{progress:F0}%\n({completed}/{total})", 
+                Foreground = Brushes.White, 
+                FontSize = 11, 
+                HorizontalAlignment = HorizontalAlignment.Center, 
+                Margin = new Thickness(0, 0, 0, 8), 
+                TextAlignment = TextAlignment.Center,
+                FontWeight = FontWeights.Bold
+            };
             progressStack.Children.Add(progressText);
-            progressStack.Children.Add(progressBar);
+
+            // Consolidation of Multi-colored Progress Bar
+            var distributionGrid = new Grid { Height = 10, Margin = new Thickness(0, 0, 0, 10) };
+            var totalTasks = Math.Max(total, 1);
+            
+            if (completed > 0)
+            {
+                var completedBar = new Border { Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10b981")), HorizontalAlignment = HorizontalAlignment.Left, CornerRadius = new CornerRadius(3) };
+                completedBar.Width = (completed * 150.0 / totalTasks);
+                distributionGrid.Children.Add(completedBar);
+            }
+            if (inProgress > 0)
+            {
+                var inProgressBar = new Border { Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f59e0b")), HorizontalAlignment = HorizontalAlignment.Left, CornerRadius = new CornerRadius(3) };
+                inProgressBar.Margin = new Thickness(completed > 0 ? completed * 150.0 / totalTasks : 0, 0, 0, 0);
+                inProgressBar.Width = (inProgress * 150.0 / totalTasks);
+                distributionGrid.Children.Add(inProgressBar);
+            }
+            if (taskPool > 0)
+            {
+                var taskPoolBar = new Border { Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#64748b")), HorizontalAlignment = HorizontalAlignment.Left, CornerRadius = new CornerRadius(3) };
+                double offset = (completed + inProgress) * 150.0 / totalTasks;
+                taskPoolBar.Margin = new Thickness(offset, 0, 0, 0);
+                taskPoolBar.Width = (taskPool * 150.0 / totalTasks);
+                distributionGrid.Children.Add(taskPoolBar);
+            }
+            progressStack.Children.Add(distributionGrid);
+
+            // Legend inside progress stack
+            var legend = new WrapPanel { HorizontalAlignment = HorizontalAlignment.Center };
+            legend.Children.Add(new TextBlock { Text = $"■ 完成 {completed} ", Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10b981")), FontSize = 9 });
+            legend.Children.Add(new TextBlock { Text = $"■ 进行 {inProgress} ", Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f59e0b")), FontSize = 9 });
+            legend.Children.Add(new TextBlock { Text = $"■ 池 {taskPool}", Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#64748b")), FontSize = 9 });
+            progressStack.Children.Add(legend);
             
             DockPanel.SetDock(progressStack, Dock.Right);
             dock.Children.Add(progressStack);
 
             border.Child = dock;
             outerStack.Children.Add(border);
-
-            // Add Task Distribution inside the milestone card (inside the border)
-            var taskDistributionStack = new StackPanel { Margin = new Thickness(0, 15, 0, 0) };
-            taskDistributionStack.Children.Add(new TextBlock { Text = "任务分布", Foreground = Brushes.Gray, FontSize = 11, Margin = new Thickness(0, 0, 0, 10) });
-
-            int taskPool = tasksInMilestone.Count(t => t.Status == "Task Pool");
-            int inProgress = tasksInMilestone.Count(t => t.Status == "In Progress");
-
-            // Simple progress visualization
-            var grid = new Grid();
-            grid.Height = 16;
-            grid.Margin = new Thickness(0, 5, 0, 5);
-            grid.HorizontalAlignment = HorizontalAlignment.Stretch;
-            
-            // Use a Grid with star sizing for flexible layout
-            var totalTasks = Math.Max(tasksInMilestone.Count, 1);
-            
-            if (completed > 0)
-            {
-                var completedBar = new Border { Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10b981")), HorizontalAlignment = HorizontalAlignment.Left, CornerRadius = new CornerRadius(3) };
-                completedBar.Width = (completed * 300.0 / totalTasks);
-                grid.Children.Add(completedBar);
-            }
-            if (inProgress > 0)
-            {
-                var inProgressBar = new Border { Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f59e0b")), HorizontalAlignment = HorizontalAlignment.Left, CornerRadius = new CornerRadius(3) };
-                inProgressBar.Margin = new Thickness(completed > 0 ? completed * 300.0 / totalTasks : 0, 0, 0, 0);
-                inProgressBar.Width = (inProgress * 300.0 / totalTasks);
-                grid.Children.Add(inProgressBar);
-            }
-            if (taskPool > 0)
-            {
-                var taskPoolBar = new Border { Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#64748b")), HorizontalAlignment = HorizontalAlignment.Left, CornerRadius = new CornerRadius(3) };
-                double offset = (completed + inProgress) * 300.0 / totalTasks;
-                taskPoolBar.Margin = new Thickness(offset, 0, 0, 0);
-                taskPoolBar.Width = (taskPool * 300.0 / totalTasks);
-                grid.Children.Add(taskPoolBar);
-            }
-
-            taskDistributionStack.Children.Add(grid);
-
-            var legend = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 10, 0, 0) };
-            legend.Children.Add(new TextBlock { Text = $"✅ 完成: {completed}", Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10b981")), FontSize = 11, Margin = new Thickness(0, 0, 15, 0) });
-            legend.Children.Add(new TextBlock { Text = $"🔄 进行: {inProgress}", Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f59e0b")), FontSize = 11, Margin = new Thickness(0, 0, 15, 0) });
-            legend.Children.Add(new TextBlock { Text = $"📋 任务池: {taskPool}", Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#64748b")), FontSize = 11 });
-            taskDistributionStack.Children.Add(legend);
-
-            outerStack.Children.Add(taskDistributionStack);
             
             // Add Buttons
             var btnPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 15, 0, 0) };
