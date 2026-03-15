@@ -955,7 +955,16 @@ namespace GamePrince
             };
             _tasks.Add(newTask);
             DataService.SaveTasks(_tasks);
-            UpdateKanban();
+            
+            // 根据当前视图类型刷新对应的视图
+            if (TaskListViewGrid.Visibility == Visibility.Visible)
+            {
+                UpdateListView();
+            }
+            else
+            {
+                UpdateKanban();
+            }
         }
 
         private Brush GetCategoryBrush(string category)
@@ -1113,20 +1122,20 @@ namespace GamePrince
 
             if (completed > 0)
             {
-                var completedBar = new Border { Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10b981")), HorizontalAlignment = HorizontalAlignment.Left, CornerRadius = new CornerRadius(3) };
+                var completedBar = new Border { Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10b981")), HorizontalAlignment = HorizontalAlignment.Left, CornerRadius = new CornerRadius(3,0,0,3) };
                 completedBar.Width = (completed * 150.0 / totalTasks);
                 distributionGrid.Children.Add(completedBar);
             }
             if (inProgress > 0)
             {
-                var inProgressBar = new Border { Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f59e0b")), HorizontalAlignment = HorizontalAlignment.Left, CornerRadius = new CornerRadius(3) };
+                var inProgressBar = new Border { Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f59e0b")), HorizontalAlignment = HorizontalAlignment.Left };
                 inProgressBar.Margin = new Thickness(completed > 0 ? completed * 150.0 / totalTasks : 0, 0, 0, 0);
                 inProgressBar.Width = (inProgress * 150.0 / totalTasks);
                 distributionGrid.Children.Add(inProgressBar);
             }
             if (taskPool > 0)
             {
-                var taskPoolBar = new Border { Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#64748b")), HorizontalAlignment = HorizontalAlignment.Left, CornerRadius = new CornerRadius(3) };
+                var taskPoolBar = new Border { Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#64748b")), HorizontalAlignment = HorizontalAlignment.Left, CornerRadius = new CornerRadius(0,3,3,0) };
                 double offset = (completed + inProgress) * 150.0 / totalTasks;
                 taskPoolBar.Margin = new Thickness(offset, 0, 0, 0);
                 taskPoolBar.Width = (taskPool * 150.0 / totalTasks);

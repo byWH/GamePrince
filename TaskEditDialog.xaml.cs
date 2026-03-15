@@ -23,8 +23,6 @@ namespace GamePrince
             TagsInput.Text = string.Join(", ", task.Tags);
             DescriptionInput.Text = task.Description;
 
-            MilestoneInput.DisplayMemberPath = "Title";
-            MilestoneInput.SelectedValuePath = "Id";
             MilestoneInput.ItemsSource = milestones;
             MilestoneInput.SelectedValue = task.MilestoneId;
         }

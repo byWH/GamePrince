@@ -182,9 +182,15 @@
                             <TextBlock Text="🎯" Foreground="#64748b" VerticalAlignment="Center" Margin="0,0,10,0" FontSize="14"/>
                             <ComboBox x:Name="MilestoneFilter" Width="150" Background="Transparent" BorderThickness="0" 
                                       Foreground="White" VerticalAlignment="Center" 
-                                      DisplayMemberPath="Title" SelectedValuePath="Id"
+                                      SelectedValuePath="Id"
                                       SelectionChanged="MilestoneFilter_SelectionChanged"
-                                      Style="{StaticResource ModernComboBoxStyle}"/>
+                                      Style="{StaticResource ModernComboBoxStyle}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Title}" Foreground="White"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
                         </StackPanel>
                     </Border>
 
@@ -465,3 +471,4 @@
         </Grid>
     </Grid>
 </Window>
+

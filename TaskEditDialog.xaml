@@ -218,7 +218,13 @@
                     <StackPanel Grid.Column="2">
                         <TextBlock Text="里程碑" Style="{StaticResource FieldLabel}"/>
                         <ComboBox x:Name="MilestoneInput" Style="{StaticResource InputComboBox}" 
-                                  DisplayMemberPath="Title" SelectedValuePath="Id"/>
+                                  SelectedValuePath="Id">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Title}" Foreground="White"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
                     </StackPanel>
                 </Grid>
 
