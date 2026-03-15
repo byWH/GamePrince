@@ -22,14 +22,15 @@ namespace GamePrince
             UpdateMilestoneFilter();
             UpdateKanban();
             PopulateHeatmap();
-            
+
             // Set default view to Project Overview
             UpdateNavButtons("ProjectOverview");
             ShowProjectOverview(new object(), new RoutedEventArgs());
 
             _uiTimer = new System.Windows.Threading.DispatcherTimer();
             _uiTimer.Interval = TimeSpan.FromSeconds(1);
-            _uiTimer.Tick += (s, e) => {
+            _uiTimer.Tick += (s, e) =>
+            {
                 if (_tasks.Any(t => t.LastTimerStart != null))
                     UpdateKanban();
             };
@@ -60,13 +61,13 @@ namespace GamePrince
             var fileDist = GitService.GetFileTypeDistribution(_currentProjectPath);
             var branches = GitService.GetBranches(_currentProjectPath);
             int totalFiles = fileDist.Values.Sum();
-            
+
             var topExtensions = fileDist.OrderByDescending(kv => kv.Value)
                 .Take(3)
                 .Select(kv => $"{kv.Key}: {kv.Value}");
 
             StatsText.Text = $"提交总数: {commits.Count} | 文件总数: {totalFiles} ({string.Join(", ", topExtensions)})";
-            
+
             // 显示当前分支
             var currentBranch = branches.FirstOrDefault(b => b.IsCurrent);
             if (currentBranch != null)
@@ -81,7 +82,7 @@ namespace GamePrince
             {
                 BranchText.Text = "分支: -";
             }
-            
+
             PopulateHeatmap();
         }
 
@@ -133,10 +134,10 @@ namespace GamePrince
             OverviewInProgress.Text = _tasks.Count(t => t.Status == "In Progress").ToString();
             OverviewCompleted.Text = _tasks.Count(t => t.Status == "Completed").ToString();
             OverviewMilestones.Text = _milestones.Count.ToString();
-            
+
             OverviewProjectName.Text = string.IsNullOrEmpty(_currentProjectPath) ? "未选择项目" : System.IO.Path.GetFileName(_currentProjectPath);
             OverviewProjectPath.Text = _currentProjectPath;
-            
+
             if (!string.IsNullOrEmpty(_currentProjectPath))
             {
                 var commits = GitService.GetCommitHistory(_currentProjectPath);
@@ -148,7 +149,7 @@ namespace GamePrince
             {
                 OverviewGitStats.Text = "Git提交: 0 | 分支: -";
             }
-            
+
             // Recent tasks
             OverviewRecentTasks.Children.Clear();
             var recentTasks = _tasks.OrderByDescending(t => t.DateCreated).Take(5).ToList();
@@ -167,7 +168,7 @@ namespace GamePrince
                     OverviewRecentTasks.Children.Add(row);
                 }
             }
-            
+
             // Upcoming milestones
             OverviewUpcomingMilestones.Children.Clear();
             var upcomingMilestones = _milestones.Where(m => !m.IsCompleted && !string.IsNullOrEmpty(m.TargetDate) && DateTime.TryParse(m.TargetDate, out DateTime target) && target >= DateTime.Now).OrderBy(m => DateTime.Parse(m.TargetDate)).Take(3).ToList();
@@ -208,15 +209,15 @@ namespace GamePrince
             TitleText.Text = "任务管理";
             TaskManagementView.Visibility = Visibility.Visible;
             TaskViewSwitcher.Visibility = Visibility.Visible;
-            
+
             ProjectOverviewView.Visibility = Visibility.Collapsed;
             HeatmapView.Visibility = Visibility.Collapsed;
             MilestoneView.Visibility = Visibility.Collapsed;
             CalendarViewGrid.Visibility = Visibility.Collapsed;
             WeeklyReportViewGrid.Visibility = Visibility.Collapsed;
-            
+
             UpdateNavButtons("Tasks");
-            
+
             // Default to Kanban view every time we enter
             KanbanViewButton.IsChecked = true;
             SwitchToKanbanView(this, new RoutedEventArgs());
@@ -304,7 +305,7 @@ namespace GamePrince
         private void UpdateListView()
         {
             TaskListContainer.Children.Clear();
-            
+
             // Header with proper Grid layout
             var headerGrid = new Grid { Margin = new Thickness(0, 0, 0, 15) };
             headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(80) });
@@ -314,7 +315,7 @@ namespace GamePrince
             headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(80) });
             headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(80) });
             headerGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(120) });
-            
+
             headerGrid.Children.Add(new TextBlock { Text = "状态", Foreground = Brushes.Gray, FontSize = 11 });
             var titleHeader = new TextBlock { Text = "任务名称", Foreground = Brushes.Gray, FontSize = 11, Margin = new Thickness(10, 0, 0, 0) };
             Grid.SetColumn(titleHeader, 1);
@@ -334,7 +335,7 @@ namespace GamePrince
             var actionHeader = new TextBlock { Text = "操作", Foreground = Brushes.Gray, FontSize = 11, Margin = new Thickness(10, 0, 0, 0) };
             Grid.SetColumn(actionHeader, 6);
             headerGrid.Children.Add(actionHeader);
-            
+
             TaskListContainer.Children.Add(headerGrid);
 
             string filter = SearchBox.Text.ToLower();
@@ -345,8 +346,8 @@ namespace GamePrince
                 if (!string.IsNullOrEmpty(selectedMilestoneId) && task.MilestoneId != selectedMilestoneId)
                     continue;
 
-                if (!string.IsNullOrEmpty(filter) && 
-                    !task.Title.ToLower().Contains(filter) && 
+                if (!string.IsNullOrEmpty(filter) &&
+                    !task.Title.ToLower().Contains(filter) &&
                     !task.Category.ToLower().Contains(filter))
                     continue;
 
@@ -373,7 +374,7 @@ namespace GamePrince
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(80) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(80) });
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(120) });
-            
+
             // Status
             var statusColor = task.Status == "Completed" ? Brushes.Green : (task.Status == "In Progress" ? Brushes.Orange : Brushes.Gray);
             var statusBlock = new TextBlock { Text = task.Status switch { "Task Pool" => "📋 任务池", "In Progress" => "🔄 进行中", "Completed" => "✅ 完成", _ => task.Status }, Foreground = statusColor, FontSize = 12, VerticalAlignment = VerticalAlignment.Center };
@@ -411,15 +412,18 @@ namespace GamePrince
             // Buttons
             var btnPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(10, 0, 0, 0) };
             var btnEdit = new Button { Content = "编辑", Background = Brushes.Transparent, Foreground = Brushes.LightGray, BorderThickness = new Thickness(0), FontSize = 11, Padding = new Thickness(5, 2, 5, 2), Cursor = System.Windows.Input.Cursors.Hand };
-            btnEdit.Click += (s, e) => {
+            btnEdit.Click += (s, e) =>
+            {
                 var editDialog = new TaskEditDialog(task, _milestones) { Owner = this };
-                if (editDialog.ShowDialog() == true) {
+                if (editDialog.ShowDialog() == true)
+                {
                     DataService.SaveTasks(_tasks);
                     UpdateListView();
                 }
             };
             var btnDelete = new Button { Content = "删除", Background = Brushes.Transparent, Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ef4444")), BorderThickness = new Thickness(0), FontSize = 11, Padding = new Thickness(5, 2, 5, 2), Cursor = System.Windows.Input.Cursors.Hand };
-            btnDelete.Click += (s, e) => {
+            btnDelete.Click += (s, e) =>
+            {
                 _tasks.Remove(task);
                 DataService.SaveTasks(_tasks);
                 UpdateListView();
@@ -453,15 +457,15 @@ namespace GamePrince
             weekHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             weekHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             weekHeader.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            
+
             string[] weekDays = { "日", "一", "二", "三", "四", "五", "六" };
             for (int i = 0; i < 7; i++)
             {
-                var dayHeader = new TextBlock 
-                { 
-                    Text = weekDays[i], 
-                    Foreground = i == 0 ? Brushes.Red : (i == 6 ? Brushes.Red : Brushes.Gray), 
-                    FontSize = 12, 
+                var dayHeader = new TextBlock
+                {
+                    Text = weekDays[i],
+                    Foreground = i == 0 ? Brushes.Red : (i == 6 ? Brushes.Red : Brushes.Gray),
+                    FontSize = 12,
                     TextAlignment = TextAlignment.Center,
                     FontWeight = FontWeights.Bold
                 };
@@ -476,7 +480,7 @@ namespace GamePrince
             {
                 calendarGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             }
-            
+
             // Calculate rows needed
             int totalCells = startDayOfWeek + daysInMonth;
             int rows = (int)Math.Ceiling(totalCells / 7.0);
@@ -484,7 +488,7 @@ namespace GamePrince
             {
                 calendarGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(80) });
             }
-            
+
             // Empty cells before first day
             for (int i = 0; i < startDayOfWeek; i++)
             {
@@ -498,7 +502,7 @@ namespace GamePrince
             for (int day = 1; day <= daysInMonth; day++)
             {
                 var date = new DateTime(_calendarCurrentMonth.Year, _calendarCurrentMonth.Month, day);
-                var tasksOnDay = _tasks.Where(t => 
+                var tasksOnDay = _tasks.Where(t =>
                     (t.Status == "Completed" && !string.IsNullOrEmpty(t.DateCompleted) && DateTime.Parse(t.DateCompleted).Date == date) ||
                     (t.Status != "Completed" && !string.IsNullOrEmpty(t.DueDate) && DateTime.Parse(t.DueDate).Date == date)
                 ).ToList();
@@ -512,15 +516,15 @@ namespace GamePrince
                 };
 
                 var cellStack = new StackPanel();
-                
+
                 // Day number - highlight today
                 bool isToday = date == DateTime.Today;
-                var dayText = new TextBlock 
-                { 
-                    Text = day.ToString(), 
-                    Foreground = isToday ? Brushes.Orange : (date.DayOfWeek == DayOfWeek.Sunday || date.DayOfWeek == DayOfWeek.Saturday ? Brushes.Red : Brushes.White), 
-                    FontSize = 14, 
-                    FontWeight = FontWeights.Bold 
+                var dayText = new TextBlock
+                {
+                    Text = day.ToString(),
+                    Foreground = isToday ? Brushes.Orange : (date.DayOfWeek == DayOfWeek.Sunday || date.DayOfWeek == DayOfWeek.Saturday ? Brushes.Red : Brushes.White),
+                    FontSize = 14,
+                    FontWeight = FontWeights.Bold
                 };
                 cellStack.Children.Add(dayText);
 
@@ -534,7 +538,7 @@ namespace GamePrince
                 }
 
                 cellBorder.Child = cellStack;
-                
+
                 int cellIndex = startDayOfWeek + day - 1;
                 Grid.SetRow(cellBorder, cellIndex / 7);
                 Grid.SetColumn(cellBorder, cellIndex % 7);
@@ -603,12 +607,12 @@ namespace GamePrince
             {
                 var dayRow = new DockPanel { Margin = new Thickness(0, 0, 0, 10) };
                 dayRow.Children.Add(new TextBlock { Text = $"{kvp.Key:ddd}", Foreground = Brushes.Gray, Width = 50 });
-                
+
                 var barBorder = new Border { Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#334155")), Height = 20, CornerRadius = new CornerRadius(4) };
                 var barFill = new Border { Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8b5cf6")), HorizontalAlignment = HorizontalAlignment.Left, Width = (kvp.Value / maxHours) * 200, CornerRadius = new CornerRadius(4) };
                 barBorder.Child = barFill;
                 dayRow.Children.Add(barBorder);
-                
+
                 dayRow.Children.Add(new TextBlock { Text = $"{kvp.Value:F1}h", Foreground = Brushes.White, Width = 50, TextAlignment = TextAlignment.Right, Margin = new Thickness(10, 0, 0, 0) });
                 chartStack.Children.Add(dayRow);
             }
@@ -621,7 +625,7 @@ namespace GamePrince
             taskStack.Children.Add(new TextBlock { Text = "任务工时明细", Foreground = Brushes.White, FontSize = 16, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 0, 0, 15) });
 
             var tasksWithTime = _tasks.Where(t => t.LoggedHours > 0 || t.LastTimerStart != null).OrderByDescending(t => t.LoggedHours + (t.LastTimerStart != null && DateTime.TryParse(t.LastTimerStart, out var st) ? (DateTime.Now - st).TotalHours : 0)).ToList();
-            
+
             if (tasksWithTime.Count == 0)
             {
                 taskStack.Children.Add(new TextBlock { Text = "暂无工时记录", Foreground = Brushes.Gray, FontSize = 14 });
@@ -678,8 +682,8 @@ namespace GamePrince
                 if (!string.IsNullOrEmpty(selectedMilestoneId) && task.MilestoneId != selectedMilestoneId)
                     continue;
 
-                if (!string.IsNullOrEmpty(filter) && 
-                    !task.Title.ToLower().Contains(filter) && 
+                if (!string.IsNullOrEmpty(filter) &&
+                    !task.Title.ToLower().Contains(filter) &&
                     !task.Category.ToLower().Contains(filter) &&
                     !(task.Tags?.Any(t => t.ToLower().Contains(filter)) ?? false))
                 {
@@ -704,7 +708,7 @@ namespace GamePrince
             };
 
             var stack = new StackPanel();
-            
+
             var categoryText = new TextBlock
             {
                 Text = task.Category.ToUpper(),
@@ -713,7 +717,7 @@ namespace GamePrince
                 FontWeight = FontWeights.Bold,
                 Margin = new Thickness(0, 0, 0, 5)
             };
-            
+
             var titleText = new TextBlock
             {
                 Text = task.Title,
@@ -739,10 +743,10 @@ namespace GamePrince
                         Margin = new Thickness(0, 5, 0, 0),
                         HorizontalAlignment = HorizontalAlignment.Left
                     };
-                    milestoneBorder.Child = new TextBlock 
-                    { 
-                        Text = $"🎯 {milestone.Title}", 
-                        FontSize = 9, 
+                    milestoneBorder.Child = new TextBlock
+                    {
+                        Text = $"🎯 {milestone.Title}",
+                        FontSize = 9,
                         Foreground = Brushes.Cyan,
                         FontWeight = FontWeights.SemiBold
                     };
@@ -780,7 +784,7 @@ namespace GamePrince
             var metaStack = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 8, 0, 0) };
             metaStack.Children.Add(new TextBlock { Text = $"⚡ {task.Urgency}", Foreground = Brushes.Orange, FontSize = 10, Margin = new Thickness(0, 0, 10, 0) });
             metaStack.Children.Add(new TextBlock { Text = $"⭐ {task.Importance}", Foreground = Brushes.Gold, FontSize = 10, Margin = new Thickness(0, 0, 10, 0) });
-            
+
             // Time Tracking Display
             double totalLogged = task.LoggedHours;
             if (task.LastTimerStart != null && DateTime.TryParse(task.LastTimerStart, out DateTime liveStart))
@@ -788,10 +792,10 @@ namespace GamePrince
                 totalLogged += (DateTime.Now - liveStart).TotalHours;
             }
 
-            var timeText = new TextBlock 
-            { 
-                Text = $"🕒 {FormatTime(totalLogged)} / {task.EstimatedHours}h", 
-                Foreground = task.LastTimerStart != null ? Brushes.LightGreen : Brushes.LightBlue, 
+            var timeText = new TextBlock
+            {
+                Text = $"🕒 {FormatTime(totalLogged)} / {task.EstimatedHours}h",
+                Foreground = task.LastTimerStart != null ? Brushes.LightGreen : Brushes.LightBlue,
                 FontSize = 10,
                 VerticalAlignment = VerticalAlignment.Center
             };
@@ -800,7 +804,7 @@ namespace GamePrince
 
             // Add Buttons
             var btnPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 10, 0, 0) };
-            
+
             var btnTimer = new Button
             {
                 Content = task.LastTimerStart == null ? "▶ 开始计时" : "⏹ 停止",
@@ -812,12 +816,13 @@ namespace GamePrince
                 Cursor = System.Windows.Input.Cursors.Hand,
                 FontSize = 10
             };
-            btnTimer.Click += (s, e) => {
+            btnTimer.Click += (s, e) =>
+            {
                 ToggleTimer(task);
                 UpdateKanban(); // Refresh to update button state and time
             };
             btnPanel.Children.Add(btnTimer);
-            
+
             var btnDelete = new Button
             {
                 Content = "删除",
@@ -829,7 +834,8 @@ namespace GamePrince
                 Cursor = System.Windows.Input.Cursors.Hand,
                 FontSize = 11
             };
-            btnDelete.Click += (s, e) => {
+            btnDelete.Click += (s, e) =>
+            {
                 _tasks.Remove(task);
                 DataService.SaveTasks(_tasks);
                 UpdateKanban();
@@ -846,7 +852,8 @@ namespace GamePrince
                 Cursor = System.Windows.Input.Cursors.Hand,
                 FontSize = 11
             };
-            btnEdit.Click += (s, e) => {
+            btnEdit.Click += (s, e) =>
+            {
                 var editDialog = new TaskEditDialog(task, _milestones) { Owner = this };
                 if (editDialog.ShowDialog() == true)
                 {
@@ -862,7 +869,7 @@ namespace GamePrince
                 Style = (Style)FindResource("PremiumButtonStyle")
             };
             btnMove.Click += (s, e) => MoveTask(task);
-            
+
             btnPanel.Children.Add(btnDelete);
             btnPanel.Children.Add(btnEdit);
             btnPanel.Children.Add(btnMove);
@@ -919,11 +926,11 @@ namespace GamePrince
 
         private void MoveTask(TaskItem task)
         {
-            if (task.Status == "Task Pool") 
+            if (task.Status == "Task Pool")
             {
                 task.Status = "In Progress";
             }
-            else if (task.Status == "In Progress") 
+            else if (task.Status == "In Progress")
             {
                 task.Status = "Completed";
                 task.DateCompleted = DateTime.Now.ToString("yyyy-MM-dd");
@@ -936,10 +943,10 @@ namespace GamePrince
 
         private void AddTask_Click(object sender, RoutedEventArgs e)
         {
-            var newTask = new TaskItem 
-            { 
-                Title = "新开发任务", 
-                Category = "程序", 
+            var newTask = new TaskItem
+            {
+                Title = "新开发任务",
+                Category = "程序",
                 Status = "Task Pool",
                 Urgency = 3,
                 Importance = 4,
@@ -965,13 +972,13 @@ namespace GamePrince
         private void PopulateHeatmap()
         {
             HeatmapGrid.Children.Clear();
-            var activity = string.IsNullOrEmpty(_currentProjectPath) 
-                ? new Dictionary<DateTime, int>() 
+            var activity = string.IsNullOrEmpty(_currentProjectPath)
+                ? new Dictionary<DateTime, int>()
                 : GitService.GetActivityHeatmap(_currentProjectPath);
 
             DateTime endDate = DateTime.Now.Date;
             DateTime startDate = endDate.AddDays(-364);
-            
+
             // Adjust to start on Sunday to match GitHub style (52 weeks)
             while (startDate.DayOfWeek != DayOfWeek.Sunday)
                 startDate = startDate.AddDays(-1);
@@ -984,7 +991,7 @@ namespace GamePrince
                     DateTime current = startDate.AddDays(week * 7 + day);
                     // Skip future dates
                     if (current > endDate) continue;
-                    
+
                     int count = activity.ContainsKey(current) ? activity[current] : 0;
                     int level = count == 0 ? 0 : Math.Min(4, (count / 2) + 1);
 
@@ -1018,12 +1025,13 @@ namespace GamePrince
         private void UpdateMilestoneView()
         {
             MilestoneList.Children.Clear();
-            
+
             // Add Header with Add Button
             var header = new DockPanel { Margin = new Thickness(0, 0, 0, 20) };
             var title = new TextBlock { Text = "里程碑列表", Foreground = Brushes.White, FontSize = 24, FontWeight = FontWeights.Bold };
             var btnAdd = new Button { Content = "+ 新建里程碑", Style = (Style)FindResource("PremiumButtonStyle"), HorizontalAlignment = HorizontalAlignment.Right };
-            btnAdd.Click += (s, e) => {
+            btnAdd.Click += (s, e) =>
+            {
                 var newMilestone = new Milestone { Title = "新里程碑", Version = "1.0.0" };
                 var editDialog = new MilestoneEditDialog(newMilestone) { Owner = this };
                 if (editDialog.ShowDialog() == true)
@@ -1034,19 +1042,19 @@ namespace GamePrince
                     UpdateMilestoneFilter();
                 }
             };
-            
+
             header.Children.Add(title);
             header.Children.Add(btnAdd);
             MilestoneList.Children.Add(header);
 
             // Create a vertical StackPanel for list layout
             var verticalStack = new StackPanel();
-            
+
             foreach (var milestone in _milestones)
             {
                 verticalStack.Children.Add(CreateMilestoneCard(milestone));
             }
-            
+
             MilestoneList.Children.Add(verticalStack);
         }
 
@@ -1061,20 +1069,20 @@ namespace GamePrince
             };
 
             var outerStack = new StackPanel();
-            
+
             var dock = new DockPanel();
-            
+
             var infoStack = new StackPanel();
             var titleText = new TextBlock { Text = milestone.Title, Foreground = Brushes.White, FontSize = 18, FontWeight = FontWeights.Bold };
             var versionText = new TextBlock { Text = $"版本: {milestone.Version}", Foreground = Brushes.Cyan, FontSize = 12, Margin = new Thickness(0, 5, 0, 5) };
             var descText = new TextBlock { Text = milestone.Description, Foreground = Brushes.Gray, FontSize = 14, TextWrapping = TextWrapping.Wrap };
             var dateText = new TextBlock { Text = $"时间: {milestone.StartDate} ~ {milestone.TargetDate}", Foreground = Brushes.Gray, FontSize = 11, Margin = new Thickness(0, 5, 0, 0) };
-            
+
             infoStack.Children.Add(titleText);
             infoStack.Children.Add(versionText);
             infoStack.Children.Add(descText);
             infoStack.Children.Add(dateText);
-            
+
             dock.Children.Add(infoStack);
 
             // Progress and Task Distribution (Right Side)
@@ -1086,14 +1094,14 @@ namespace GamePrince
             double progress = total == 0 ? 0 : (double)completed / total * 100;
 
             var progressStack = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(20, 10, 0, 10), Width = 150 };
-            
-            var progressText = new TextBlock 
-            { 
-                Text = $"{progress:F0}%\n({completed}/{total})", 
-                Foreground = Brushes.White, 
-                FontSize = 11, 
-                HorizontalAlignment = HorizontalAlignment.Center, 
-                Margin = new Thickness(0, 0, 0, 8), 
+
+            var progressText = new TextBlock
+            {
+                Text = $"{progress:F0}%\n({completed}/{total})",
+                Foreground = Brushes.White,
+                FontSize = 11,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                Margin = new Thickness(0, 0, 0, 8),
                 TextAlignment = TextAlignment.Center,
                 FontWeight = FontWeights.Bold
             };
@@ -1102,7 +1110,7 @@ namespace GamePrince
             // Consolidation of Multi-colored Progress Bar
             var distributionGrid = new Grid { Height = 10, Margin = new Thickness(0, 0, 0, 10) };
             var totalTasks = Math.Max(total, 1);
-            
+
             if (completed > 0)
             {
                 var completedBar = new Border { Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10b981")), HorizontalAlignment = HorizontalAlignment.Left, CornerRadius = new CornerRadius(3) };
@@ -1132,50 +1140,65 @@ namespace GamePrince
             legend.Children.Add(new TextBlock { Text = $"■ 进行 {inProgress} ", Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f59e0b")), FontSize = 9 });
             legend.Children.Add(new TextBlock { Text = $"■ 池 {taskPool}", Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#64748b")), FontSize = 9 });
             progressStack.Children.Add(legend);
-            
-            DockPanel.SetDock(progressStack, Dock.Right);
-            dock.Children.Add(progressStack);
 
-            border.Child = dock;
-            outerStack.Children.Add(border);
-            
-            // Add Buttons
-            var btnPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 15, 0, 0) };
-            
+            // Buttons inside progress stack
+            var btnPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 15, 0, 0) };
+
+            var btnViewTasks = new Button
+            {
+                Content = "查看任务",
+                Padding = new Thickness(5, 10, 5, 10),
+                Background = Brushes.Transparent,
+                Foreground = Brushes.LightGreen,
+                BorderThickness = new Thickness(0),
+                Cursor = System.Windows.Input.Cursors.Hand,
+                FontSize = 11,
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+            btnViewTasks.Click += (s, e) =>
+            {
+                MilestoneFilter.SelectedValue = milestone.Id;
+                ShowTaskManagement(this, new RoutedEventArgs());
+            };
+
             var btnEdit = new Button
             {
                 Content = "编辑",
-                Margin = new Thickness(0, 0, 10, 0),
-                Padding = new Thickness(15, 6, 15, 6),
+                Padding = new Thickness(5, 10, 5, 10),
                 Background = Brushes.Transparent,
                 Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#94a3b8")),
                 BorderThickness = new Thickness(0),
                 Cursor = System.Windows.Input.Cursors.Hand,
-                FontSize = 12
+                FontSize = 11,
+                HorizontalAlignment = HorizontalAlignment.Center
             };
-            btnEdit.Click += (s, e) => {
+            btnEdit.Click += (s, e) =>
+            {
                 var editDialog = new MilestoneEditDialog(milestone) { Owner = this };
-                if (editDialog.ShowDialog() == true) {
+                if (editDialog.ShowDialog() == true)
+                {
                     DataService.SaveMilestones(_milestones);
                     UpdateMilestoneView();
                 }
             };
-            
+
             var btnDelete = new Button
             {
                 Content = "删除",
-                Padding = new Thickness(15, 6, 15, 6),
+                Padding = new Thickness(5, 10, 5, 10),
                 Background = Brushes.Transparent,
                 Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ef4444")),
                 BorderThickness = new Thickness(0),
                 Cursor = System.Windows.Input.Cursors.Hand,
-                FontSize = 12
+                FontSize = 11,
+                HorizontalAlignment = HorizontalAlignment.Center
             };
-            btnDelete.Click += (s, e) => {
+            btnDelete.Click += (s, e) =>
+            {
                 var result = MessageBox.Show($"确定要删除里程碑 \"{milestone.Title}\" 吗？", "确认删除", MessageBoxButton.YesNo, MessageBoxImage.Question);
-                if (result == MessageBoxResult.Yes) {
+                if (result == MessageBoxResult.Yes)
+                {
                     _milestones.Remove(milestone);
-                    // Unlink tasks from this milestone
                     foreach (var t in _tasks.Where(t => t.MilestoneId == milestone.Id))
                         t.MilestoneId = "";
                     DataService.SaveMilestones(_milestones);
@@ -1183,34 +1206,24 @@ namespace GamePrince
                     UpdateMilestoneView();
                 }
             };
-            
-            var btnViewTasks = new Button
-            {
-                Content = "查看任务",
-                Margin = new Thickness(0, 0, 10, 0),
-                Padding = new Thickness(15, 6, 15, 6),
-                Background = Brushes.Transparent,
-                Foreground = Brushes.LightGreen,
-                BorderThickness = new Thickness(0),
-                Cursor = System.Windows.Input.Cursors.Hand,
-                FontSize = 12
-            };
-            btnViewTasks.Click += (s, e) => {
-                MilestoneFilter.SelectedValue = milestone.Id;
-                ShowTaskManagement(this, new RoutedEventArgs());
-            };
 
             btnPanel.Children.Add(btnViewTasks);
             btnPanel.Children.Add(btnEdit);
             btnPanel.Children.Add(btnDelete);
-            outerStack.Children.Add(btnPanel);
-            
-            // Add Burndown Chart (outside, as it's additional info)
+            progressStack.Children.Add(btnPanel);
+
+            // Add Burndown Chart into progress stack
             var chart = CreateBurndownChart(milestone, tasksInMilestone);
             if (chart != null)
             {
-                outerStack.Children.Add(chart);
+                progressStack.Children.Add(chart);
             }
+
+            DockPanel.SetDock(progressStack, Dock.Right);
+            dock.Children.Add(progressStack);
+
+            border.Child = dock;
+            outerStack.Children.Add(border);
 
             return outerStack;
         }
@@ -1237,7 +1250,7 @@ namespace GamePrince
             // Simple progress visualization
             var grid = new Grid();
             grid.Height = 20;
-            
+
             if (completed > 0)
             {
                 var completedBar = new Border { Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10b981")), HorizontalAlignment = HorizontalAlignment.Left, CornerRadius = new CornerRadius(4) };
@@ -1283,22 +1296,22 @@ namespace GamePrince
             int totalDays = (int)(end - start).TotalDays;
             if (totalDays <= 0) totalDays = 1;
 
-            var canvas = new Canvas { Height = 120, Margin = new Thickness(0, 0, 0, 20), Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0f172a")), ClipToBounds = true };
-            
-            double width = 800; // Expected width
-            double height = 120;
-            double padding = 20;
+            var canvas = new Canvas { Height = 80, Margin = new Thickness(0, 10, 0, 0), Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0f172a")), ClipToBounds = true };
+
+            double width = 150;
+            double height = 80;
+            double padding = 10;
             double chartWidth = width - (padding * 2);
             double chartHeight = height - (padding * 2);
 
-            int totalTasks = tasks.Count;
-            
+            int totalTasks = Math.Max(tasks.Count, 1);
+
             // Draw Ideal Line (Dashed)
             var idealLine = new System.Windows.Shapes.Polyline
             {
-                Stroke = Brushes.Gray,
+                Stroke = Brushes.DarkSlateGray,
                 StrokeThickness = 1,
-                StrokeDashArray = new DoubleCollection { 4, 4 }
+                StrokeDashArray = new DoubleCollection { 2, 2 }
             };
             idealLine.Points.Add(new Point(padding, padding));
             idealLine.Points.Add(new Point(padding + chartWidth, padding + chartHeight));
@@ -1308,20 +1321,20 @@ namespace GamePrince
             var actualLine = new System.Windows.Shapes.Polyline
             {
                 Stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8b5cf6")),
-                StrokeThickness = 2
+                StrokeThickness = 1.5
             };
 
             DateTime today = DateTime.Now.Date;
             int daysElapsed = (int)(today - start).TotalDays;
             if (daysElapsed < 0) daysElapsed = 0;
-            
+
             for (int d = 0; d <= totalDays; d++)
             {
                 DateTime currentDay = start.AddDays(d);
                 if (currentDay > today) break;
 
                 int remaining = totalTasks - tasks.Count(t => t.Status == "Completed" && !string.IsNullOrEmpty(t.DateCompleted) && DateTime.Parse(t.DateCompleted) < currentDay);
-                
+
                 double x = padding + (d * (chartWidth / totalDays));
                 double y = padding + (remaining * (chartHeight / totalTasks));
                 actualLine.Points.Add(new Point(x, y));
@@ -1329,15 +1342,14 @@ namespace GamePrince
             canvas.Children.Add(actualLine);
 
             // Label
-            var label = new TextBlock { Text = "燃尽趋势", Foreground = Brushes.Gray, FontSize = 10, Margin = new Thickness(padding, 0, 0, 0) };
-            Canvas.SetTop(label, 2);
+            var label = new TextBlock { Text = "燃尽趋势", Foreground = Brushes.Gray, FontSize = 8, Margin = new Thickness(padding, 2, 0, 0) };
             canvas.Children.Add(label);
 
             return new Border
             {
-                Background = new SolidColorBrush(Color.FromArgb(30, 255, 255, 255)),
-                CornerRadius = new CornerRadius(8),
-                Padding = new Thickness(10),
+                Background = new SolidColorBrush(Color.FromArgb(20, 255, 255, 255)),
+                CornerRadius = new CornerRadius(4),
+                Padding = new Thickness(2),
                 Child = canvas
             };
         }
