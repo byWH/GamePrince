@@ -248,6 +248,12 @@
                     </StackPanel>
                 </Grid>
 
+                <!-- 截止日期 -->
+                <StackPanel Margin="0,0,0,20">
+                    <TextBlock Text="截止日期 (YYYY-MM-DD)" Style="{StaticResource FieldLabel}"/>
+                    <TextBox x:Name="DueDateInput" Style="{StaticResource InputTextBox}"/>
+                </StackPanel>
+
                 <!-- 标签 -->
                 <StackPanel Margin="0,0,0,30">
                     <TextBlock Text="标签 (以逗号分隔)" Style="{StaticResource FieldLabel}"/>

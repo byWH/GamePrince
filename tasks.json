@@ -3,8 +3,26 @@
     "Title": "\u65B0\u5F00\u53D1\u4EFB\u52A1",
     "Description": "",
     "Category": "\u7A0B\u5E8F",
-    "Status": "Task Pool",
-    "DateCreated": "2026-03-14",
+    "Status": "Completed",
+    "DateCreated": "2026-03-15",
+    "DateCompleted": "2026-03-15",
+    "Urgency": 3,
+    "Importance": 4,
+    "Tags": [
+      "\u5F85\u5B9A"
+    ],
+    "MilestoneId": "",
+    "DueDate": "",
+    "EstimatedHours": 0,
+    "LoggedHours": 0,
+    "LastTimerStart": null
+  },
+  {
+    "Title": "\u65B0\u5F00\u53D1\u4EFB\u52A1",
+    "Description": "",
+    "Category": "\u7A0B\u5E8F",
+    "Status": "In Progress",
+    "DateCreated": "2026-03-15",
     "DateCompleted": null,
     "Urgency": 3,
     "Importance": 4,
@@ -12,6 +30,25 @@
       "\u5F85\u5B9A"
     ],
     "MilestoneId": "",
+    "DueDate": null,
+    "EstimatedHours": 0,
+    "LoggedHours": 0,
+    "LastTimerStart": null
+  },
+  {
+    "Title": "\u65B0\u5F00\u53D1\u4EFB\u52A1",
+    "Description": "",
+    "Category": "\u7A0B\u5E8F",
+    "Status": "Completed",
+    "DateCreated": "2026-03-15",
+    "DateCompleted": "2026-03-15",
+    "Urgency": 3,
+    "Importance": 4,
+    "Tags": [
+      "\u5F85\u5B9A"
+    ],
+    "MilestoneId": "",
+    "DueDate": "",
     "EstimatedHours": 0,
     "LoggedHours": 0,
     "LastTimerStart": null
@@ -29,6 +66,7 @@
       "\u5F85\u5B9A"
     ],
     "MilestoneId": "",
+    "DueDate": "",
     "EstimatedHours": 0,
     "LoggedHours": 0,
     "LastTimerStart": null
@@ -46,6 +84,7 @@
       "\u5F85\u5B9A"
     ],
     "MilestoneId": "",
+    "DueDate": "",
     "EstimatedHours": 0,
     "LoggedHours": 0,
     "LastTimerStart": null
@@ -63,6 +102,25 @@
       "\u5F85\u5B9A"
     ],
     "MilestoneId": "",
+    "DueDate": null,
+    "EstimatedHours": 0,
+    "LoggedHours": 0,
+    "LastTimerStart": null
+  },
+  {
+    "Title": "\u65B0\u5F00\u53D1\u4EFB\u52A1",
+    "Description": "",
+    "Category": "\u7A0B\u5E8F",
+    "Status": "In Progress",
+    "DateCreated": "2026-03-15",
+    "DateCompleted": null,
+    "Urgency": 3,
+    "Importance": 4,
+    "Tags": [
+      "\u5F85\u5B9A"
+    ],
+    "MilestoneId": "",
+    "DueDate": "",
     "EstimatedHours": 0,
     "LoggedHours": 0,
     "LastTimerStart": null
@@ -80,57 +138,7 @@
       "\u5F85\u5B9A"
     ],
     "MilestoneId": "",
-    "EstimatedHours": 0,
-    "LoggedHours": 0,
-    "LastTimerStart": null
-  },
-  {
-    "Title": "\u65B0\u5F00\u53D1\u4EFB\u52A1",
-    "Description": "",
-    "Category": "\u7A0B\u5E8F",
-    "Status": "Task Pool",
-    "DateCreated": "2026-03-15",
-    "DateCompleted": null,
-    "Urgency": 3,
-    "Importance": 4,
-    "Tags": [
-      "\u5F85\u5B9A"
-    ],
-    "MilestoneId": "",
-    "EstimatedHours": 0,
-    "LoggedHours": 0,
-    "LastTimerStart": null
-  },
-  {
-    "Title": "\u65B0\u5F00\u53D1\u4EFB\u52A1",
-    "Description": "",
-    "Category": "\u7A0B\u5E8F",
-    "Status": "Task Pool",
-    "DateCreated": "2026-03-15",
-    "DateCompleted": null,
-    "Urgency": 3,
-    "Importance": 4,
-    "Tags": [
-      "\u5F85\u5B9A"
-    ],
-    "MilestoneId": "",
-    "EstimatedHours": 0,
-    "LoggedHours": 0,
-    "LastTimerStart": null
-  },
-  {
-    "Title": "\u65B0\u5F00\u53D1\u4EFB\u52A1",
-    "Description": "",
-    "Category": "\u7A0B\u5E8F",
-    "Status": "Task Pool",
-    "DateCreated": "2026-03-15",
-    "DateCompleted": null,
-    "Urgency": 3,
-    "Importance": 4,
-    "Tags": [
-      "\u5F85\u5B9A"
-    ],
-    "MilestoneId": "",
+    "DueDate": null,
     "EstimatedHours": 0,
     "LoggedHours": 0,
     "LastTimerStart": null

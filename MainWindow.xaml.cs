@@ -19,6 +19,7 @@ namespace GamePrince
             InitializeComponent();
             _tasks = DataService.LoadTasks();
             _milestones = DataService.LoadMilestones();
+            UpdateMilestoneFilter();
             UpdateKanban();
             PopulateHeatmap();
             
@@ -108,6 +109,10 @@ namespace GamePrince
             TaskListViewGrid.Visibility = Visibility.Collapsed;
             CalendarViewGrid.Visibility = Visibility.Collapsed;
             WeeklyReportViewGrid.Visibility = Visibility.Collapsed;
+            TaskManagementView.Visibility = Visibility.Collapsed;
+            KanbanView.Visibility = Visibility.Collapsed;
+            TaskListViewGrid.Visibility = Visibility.Collapsed;
+            TaskViewSwitcher.Visibility = Visibility.Collapsed;
             UpdateNavButtons("ProjectOverview");
             UpdateProjectOverview();
         }
@@ -115,10 +120,9 @@ namespace GamePrince
         private void UpdateNavButtons(string activeButton)
         {
             NavProjectOverview.Tag = activeButton == "ProjectOverview" ? "Active" : null;
-            NavKanban.Tag = activeButton == "Kanban" ? "Active" : null;
+            NavTasks.Tag = activeButton == "Tasks" ? "Active" : null;
             NavPlan.Tag = activeButton == "Plan" ? "Active" : null;
             NavHeatmap.Tag = activeButton == "Heatmap" ? "Active" : null;
-            NavListView.Tag = activeButton == "ListView" ? "Active" : null;
             NavCalendar.Tag = activeButton == "Calendar" ? "Active" : null;
             NavWeeklyReport.Tag = activeButton == "WeeklyReport" ? "Active" : null;
         }
@@ -193,8 +197,43 @@ namespace GamePrince
             TaskListViewGrid.Visibility = Visibility.Collapsed;
             CalendarViewGrid.Visibility = Visibility.Collapsed;
             WeeklyReportViewGrid.Visibility = Visibility.Collapsed;
+            TaskManagementView.Visibility = Visibility.Collapsed;
+            TaskViewSwitcher.Visibility = Visibility.Collapsed;
             UpdateNavButtons("Plan");
             UpdateMilestoneView();
+        }
+
+        private void ShowTaskManagement(object sender, RoutedEventArgs e)
+        {
+            TitleText.Text = "任务管理";
+            TaskManagementView.Visibility = Visibility.Visible;
+            TaskViewSwitcher.Visibility = Visibility.Visible;
+            
+            ProjectOverviewView.Visibility = Visibility.Collapsed;
+            HeatmapView.Visibility = Visibility.Collapsed;
+            MilestoneView.Visibility = Visibility.Collapsed;
+            CalendarViewGrid.Visibility = Visibility.Collapsed;
+            WeeklyReportViewGrid.Visibility = Visibility.Collapsed;
+            
+            UpdateNavButtons("Tasks");
+            
+            // Default to Kanban view every time we enter
+            KanbanViewButton.IsChecked = true;
+            SwitchToKanbanView(this, new RoutedEventArgs());
+        }
+
+        private void SwitchToKanbanView(object sender, RoutedEventArgs e)
+        {
+            KanbanView.Visibility = Visibility.Visible;
+            TaskListViewGrid.Visibility = Visibility.Collapsed;
+            UpdateKanban();
+        }
+
+        private void SwitchToListView(object sender, RoutedEventArgs e)
+        {
+            KanbanView.Visibility = Visibility.Collapsed;
+            TaskListViewGrid.Visibility = Visibility.Visible;
+            UpdateListView();
         }
 
         private void ShowHeatmap(object sender, RoutedEventArgs e)
@@ -207,23 +246,13 @@ namespace GamePrince
             TaskListViewGrid.Visibility = Visibility.Collapsed;
             CalendarViewGrid.Visibility = Visibility.Collapsed;
             WeeklyReportViewGrid.Visibility = Visibility.Collapsed;
+            TaskManagementView.Visibility = Visibility.Collapsed;
+            TaskViewSwitcher.Visibility = Visibility.Collapsed;
             UpdateNavButtons("Heatmap");
             PopulateHeatmap();
         }
 
-        private void ShowListView(object sender, RoutedEventArgs e)
-        {
-            TitleText.Text = "任务列表";
-            KanbanView.Visibility = Visibility.Collapsed;
-            ProjectOverviewView.Visibility = Visibility.Collapsed;
-            HeatmapView.Visibility = Visibility.Collapsed;
-            MilestoneView.Visibility = Visibility.Collapsed;
-            TaskListViewGrid.Visibility = Visibility.Visible;
-            CalendarViewGrid.Visibility = Visibility.Collapsed;
-            WeeklyReportViewGrid.Visibility = Visibility.Collapsed;
-            UpdateNavButtons("ListView");
-            UpdateListView();
-        }
+
 
         private void ShowCalendar(object sender, RoutedEventArgs e)
         {
@@ -235,6 +264,8 @@ namespace GamePrince
             TaskListViewGrid.Visibility = Visibility.Collapsed;
             CalendarViewGrid.Visibility = Visibility.Visible;
             WeeklyReportViewGrid.Visibility = Visibility.Collapsed;
+            TaskManagementView.Visibility = Visibility.Collapsed;
+            TaskViewSwitcher.Visibility = Visibility.Collapsed;
             UpdateNavButtons("Calendar");
             UpdateCalendarView();
         }
@@ -249,6 +280,10 @@ namespace GamePrince
             TaskListViewGrid.Visibility = Visibility.Collapsed;
             CalendarViewGrid.Visibility = Visibility.Collapsed;
             WeeklyReportViewGrid.Visibility = Visibility.Visible;
+            TaskManagementView.Visibility = Visibility.Collapsed;
+            KanbanView.Visibility = Visibility.Collapsed;
+            TaskListViewGrid.Visibility = Visibility.Collapsed;
+            TaskViewSwitcher.Visibility = Visibility.Collapsed;
             UpdateNavButtons("WeeklyReport");
             UpdateWeeklyReport();
         }
@@ -303,8 +338,13 @@ namespace GamePrince
             TaskListContainer.Children.Add(headerGrid);
 
             string filter = SearchBox.Text.ToLower();
+            string selectedMilestoneId = MilestoneFilter.SelectedValue?.ToString() ?? "";
+
             foreach (var task in _tasks)
             {
+                if (!string.IsNullOrEmpty(selectedMilestoneId) && task.MilestoneId != selectedMilestoneId)
+                    continue;
+
                 if (!string.IsNullOrEmpty(filter) && 
                     !task.Title.ToLower().Contains(filter) && 
                     !task.Category.ToLower().Contains(filter))
@@ -459,7 +499,8 @@ namespace GamePrince
             {
                 var date = new DateTime(_calendarCurrentMonth.Year, _calendarCurrentMonth.Month, day);
                 var tasksOnDay = _tasks.Where(t => 
-                    t.Status == "Completed" && !string.IsNullOrEmpty(t.DateCompleted) && DateTime.Parse(t.DateCompleted).Date == date
+                    (t.Status == "Completed" && !string.IsNullOrEmpty(t.DateCompleted) && DateTime.Parse(t.DateCompleted).Date == date) ||
+                    (t.Status != "Completed" && !string.IsNullOrEmpty(t.DueDate) && DateTime.Parse(t.DueDate).Date == date)
                 ).ToList();
 
                 var cellBorder = new Border
@@ -606,6 +647,21 @@ namespace GamePrince
         private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             UpdateKanban();
+            UpdateListView();
+        }
+
+        private void MilestoneFilter_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            UpdateKanban();
+            UpdateListView();
+        }
+
+        private void UpdateMilestoneFilter()
+        {
+            var filterList = new List<Milestone> { new Milestone { Id = "", Title = "所有里程碑" } };
+            filterList.AddRange(_milestones);
+            MilestoneFilter.ItemsSource = filterList;
+            MilestoneFilter.SelectedIndex = 0;
         }
 
         private void UpdateKanban()
@@ -615,9 +671,13 @@ namespace GamePrince
             CompletedList.Children.Clear();
 
             string filter = SearchBox.Text.ToLower();
+            string selectedMilestoneId = MilestoneFilter.SelectedValue?.ToString() ?? "";
 
             foreach (var task in _tasks)
             {
+                if (!string.IsNullOrEmpty(selectedMilestoneId) && task.MilestoneId != selectedMilestoneId)
+                    continue;
+
                 if (!string.IsNullOrEmpty(filter) && 
                     !task.Title.ToLower().Contains(filter) && 
                     !task.Category.ToLower().Contains(filter) &&
@@ -664,6 +724,31 @@ namespace GamePrince
 
             stack.Children.Add(categoryText);
             stack.Children.Add(titleText);
+
+            // Add Milestone Badge
+            if (!string.IsNullOrEmpty(task.MilestoneId))
+            {
+                var milestone = _milestones.FirstOrDefault(m => m.Id == task.MilestoneId);
+                if (milestone != null)
+                {
+                    var milestoneBorder = new Border
+                    {
+                        Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e3a5f")),
+                        CornerRadius = new CornerRadius(4),
+                        Padding = new Thickness(6, 2, 6, 2),
+                        Margin = new Thickness(0, 5, 0, 0),
+                        HorizontalAlignment = HorizontalAlignment.Left
+                    };
+                    milestoneBorder.Child = new TextBlock 
+                    { 
+                        Text = $"🎯 {milestone.Title}", 
+                        FontSize = 9, 
+                        Foreground = Brushes.Cyan,
+                        FontWeight = FontWeights.SemiBold
+                    };
+                    stack.Children.Add(milestoneBorder);
+                }
+            }
 
             // Add Description (Markdown)
             if (!string.IsNullOrEmpty(task.Description))
@@ -858,7 +943,8 @@ namespace GamePrince
                 Status = "Task Pool",
                 Urgency = 3,
                 Importance = 4,
-                Tags = new List<string> { "待定" }
+                Tags = new List<string> { "待定" },
+                MilestoneId = MilestoneFilter.SelectedValue?.ToString() ?? ""
             };
             _tasks.Add(newTask);
             DataService.SaveTasks(_tasks);
@@ -939,9 +1025,14 @@ namespace GamePrince
             var btnAdd = new Button { Content = "+ 新建里程碑", Style = (Style)FindResource("PremiumButtonStyle"), HorizontalAlignment = HorizontalAlignment.Right };
             btnAdd.Click += (s, e) => {
                 var newMilestone = new Milestone { Title = "新里程碑", Version = "1.0.0" };
-                _milestones.Add(newMilestone);
-                DataService.SaveMilestones(_milestones);
-                UpdateMilestoneView();
+                var editDialog = new MilestoneEditDialog(newMilestone) { Owner = this };
+                if (editDialog.ShowDialog() == true)
+                {
+                    _milestones.Add(newMilestone);
+                    DataService.SaveMilestones(_milestones);
+                    UpdateMilestoneView();
+                    UpdateMilestoneFilter();
+                }
             };
             
             header.Children.Add(title);
@@ -1098,6 +1189,23 @@ namespace GamePrince
                 }
             };
             
+            var btnViewTasks = new Button
+            {
+                Content = "查看任务",
+                Margin = new Thickness(0, 0, 10, 0),
+                Padding = new Thickness(15, 6, 15, 6),
+                Background = Brushes.Transparent,
+                Foreground = Brushes.LightGreen,
+                BorderThickness = new Thickness(0),
+                Cursor = System.Windows.Input.Cursors.Hand,
+                FontSize = 12
+            };
+            btnViewTasks.Click += (s, e) => {
+                MilestoneFilter.SelectedValue = milestone.Id;
+                ShowTaskManagement(this, new RoutedEventArgs());
+            };
+
+            btnPanel.Children.Add(btnViewTasks);
             btnPanel.Children.Add(btnEdit);
             btnPanel.Children.Add(btnDelete);
             outerStack.Children.Add(btnPanel);

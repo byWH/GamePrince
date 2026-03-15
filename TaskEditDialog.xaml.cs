@@ -19,6 +19,7 @@ namespace GamePrince
             UrgencyInput.Text = task.Urgency.ToString();
             ImportanceInput.Text = task.Importance.ToString();
             EstimateInput.Text = task.EstimatedHours.ToString();
+            DueDateInput.Text = task.DueDate;
             TagsInput.Text = string.Join(", ", task.Tags);
             DescriptionInput.Text = task.Description;
 
@@ -43,6 +44,8 @@ namespace GamePrince
 
             if (double.TryParse(EstimateInput.Text, out double estimate))
                 Task.EstimatedHours = estimate;
+
+            Task.DueDate = DueDateInput.Text;
 
             Task.Tags = TagsInput.Text.Split(',')
                 .Select(t => t.Trim())

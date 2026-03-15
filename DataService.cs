@@ -16,6 +16,7 @@ namespace GamePrince
         public int Importance { get; set; } = 3; // 1-5
         public List<string> Tags { get; set; } = new();
         public string MilestoneId { get; set; } = "";
+        public string? DueDate { get; set; }
         public double EstimatedHours { get; set; } = 0;
         public double LoggedHours { get; set; } = 0;
         public string? LastTimerStart { get; set; }

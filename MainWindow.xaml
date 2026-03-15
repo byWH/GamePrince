@@ -81,6 +81,34 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <Style x:Key="ViewSwitcherRadioButton" TargetType="RadioButton">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="border" Background="Transparent" CornerRadius="4" Padding="12,6">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#3b82f6"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsChecked" Value="False"/>
+                                    <Condition Property="IsMouseOver" Value="True"/>
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="border" Property="Background" Value="#334155"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </MultiTrigger>
+                            <Trigger Property="IsChecked" Value="False">
+                                <Setter Property="Foreground" Value="#94a3b8"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <Grid>
@@ -113,10 +141,9 @@
                     <StackPanel>
                         <TextBlock Text="导航" Foreground="#475569" FontSize="11" FontWeight="SemiBold" Margin="15,10,0,10"/>
                         <Button x:Name="NavProjectOverview" Content="📊 项目概览" Style="{StaticResource NavButtonStyle}" Click="ShowProjectOverview"/>
-                        <Button x:Name="NavKanban" Content="📋 任务看板" Style="{StaticResource NavButtonStyle}" Click="ShowKanban"/>
+                        <Button x:Name="NavTasks" Content="📋 任务管理" Style="{StaticResource NavButtonStyle}" Click="ShowTaskManagement"/>
                         <Button x:Name="NavPlan" Content="📅 开发计划" Style="{StaticResource NavButtonStyle}" Click="ShowPlan"/>
                         <Button x:Name="NavHeatmap" Content="🔥 活跃热力图" Style="{StaticResource NavButtonStyle}" Click="ShowHeatmap"/>
-                        <Button x:Name="NavListView" Content="📝 任务列表" Style="{StaticResource NavButtonStyle}" Click="ShowListView"/>
                         <Button x:Name="NavCalendar" Content="🗓️ 日历视图" Style="{StaticResource NavButtonStyle}" Click="ShowCalendar"/>
                         <Button x:Name="NavWeeklyReport" Content="⏱️ 工时周报" Style="{StaticResource NavButtonStyle}" Click="ShowWeeklyReport"/>
                     </StackPanel>
@@ -146,6 +173,26 @@
                             <TextBox x:Name="SearchBox" Width="220" Background="Transparent" BorderThickness="0" 
                                      Foreground="White" CaretBrush="White" VerticalAlignment="Center" 
                                      TextChanged="SearchBox_TextChanged" FontSize="14"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 里程碑过滤 -->
+                    <Border Style="{StaticResource SearchBoxStyle}" Margin="0,0,20,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🎯" Foreground="#64748b" VerticalAlignment="Center" Margin="0,0,10,0" FontSize="14"/>
+                            <ComboBox x:Name="MilestoneFilter" Width="150" Background="Transparent" BorderThickness="0" 
+                                      Foreground="White" VerticalAlignment="Center" 
+                                      DisplayMemberPath="Title" SelectedValuePath="Id"
+                                      SelectionChanged="MilestoneFilter_SelectionChanged"
+                                      Style="{StaticResource ModernComboBoxStyle}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 视图切换 -->
+                    <Border x:Name="TaskViewSwitcher" Background="#1e293b" CornerRadius="4" Margin="0,0,20,0" Padding="2" Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal">
+                            <RadioButton x:Name="KanbanViewButton" Content="看板视图" Style="{StaticResource ViewSwitcherRadioButton}" IsChecked="True" Click="SwitchToKanbanView"/>
+                            <RadioButton x:Name="ListViewButton" Content="列表视图" Style="{StaticResource ViewSwitcherRadioButton}" Click="SwitchToListView"/>
                         </StackPanel>
                     </Border>
 
@@ -264,55 +311,80 @@
                 </ScrollViewer>
             </Grid>
             
-            <!-- Dashboard / Kanban View -->
-            <Grid x:Name="KanbanView" Grid.Row="1" Visibility="Collapsed">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                
-                <!-- 任务池 -->
-                <Border Grid.Column="0" Style="{StaticResource GlassBorder}" Margin="0,0,8,0">
-                    <DockPanel LastChildFill="True">
-                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,20">
-                            <StackPanel Orientation="Horizontal">
-                                <Border Background="#6366f1" CornerRadius="6" Width="8" Height="8" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="任务池" Foreground="White" FontSize="16" FontWeight="SemiBold"/>
-                            </StackPanel>
-                            <Button Content="+" Click="AddTask_Click" HorizontalAlignment="Right" Style="{StaticResource IconButton}" FontSize="20" FontWeight="Bold"/>
+            <!-- Task Management View (Unified Kanban and List) -->
+            <Grid x:Name="TaskManagementView" Grid.Row="1" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Kanban View -->
+                <Grid x:Name="KanbanView" Visibility="Visible">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <!-- 任务池 -->
+                    <Border Grid.Column="0" Style="{StaticResource GlassBorder}" Margin="0,0,8,0">
+                        <DockPanel LastChildFill="True">
+                            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,20">
+                                <StackPanel Orientation="Horizontal">
+                                    <Border Background="#6366f1" CornerRadius="6" Width="8" Height="8" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="任务池" Foreground="White" FontSize="16" FontWeight="SemiBold"/>
+                                </StackPanel>
+                                <Button Content="+" Click="AddTask_Click" HorizontalAlignment="Right" Style="{StaticResource IconButton}" FontSize="20" FontWeight="Bold"/>
+                            </DockPanel>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel x:Name="TaskPoolList"/>
+                            </ScrollViewer>
                         </DockPanel>
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <StackPanel x:Name="TaskPoolList"/>
-                        </ScrollViewer>
-                    </DockPanel>
-                </Border>
+                    </Border>
 
-                <!-- 进行中 -->
-                <Border Grid.Column="1" Style="{StaticResource GlassBorder}" Margin="4,0,4,0">
-                    <DockPanel LastChildFill="True">
-                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,20">
-                            <Border Background="#f59e0b" CornerRadius="6" Width="8" Height="8" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="正在进行" Foreground="White" FontSize="16" FontWeight="SemiBold"/>
-                        </StackPanel>
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <StackPanel x:Name="InProgressList"/>
-                        </ScrollViewer>
-                    </DockPanel>
-                </Border>
+                    <!-- 进行中 -->
+                    <Border Grid.Column="1" Style="{StaticResource GlassBorder}" Margin="4,0,4,0">
+                        <DockPanel LastChildFill="True">
+                            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,20">
+                                <Border Background="#f59e0b" CornerRadius="6" Width="8" Height="8" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="正在进行" Foreground="White" FontSize="16" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel x:Name="InProgressList"/>
+                            </ScrollViewer>
+                        </DockPanel>
+                    </Border>
 
-                <!-- 已完成 -->
-                <Border Grid.Column="2" Style="{StaticResource GlassBorder}" Margin="8,0,0,0">
-                    <DockPanel LastChildFill="True">
-                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,20">
-                            <Border Background="#10b981" CornerRadius="6" Width="8" Height="8" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="已完成" Foreground="White" FontSize="16" FontWeight="SemiBold"/>
-                        </StackPanel>
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <StackPanel x:Name="CompletedList"/>
-                        </ScrollViewer>
-                    </DockPanel>
-                </Border>
+                    <!-- 已完成 -->
+                    <Border Grid.Column="2" Style="{StaticResource GlassBorder}" Margin="8,0,0,0">
+                        <DockPanel LastChildFill="True">
+                            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,20">
+                                <Border Background="#10b981" CornerRadius="6" Width="8" Height="8" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="已完成" Foreground="White" FontSize="16" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel x:Name="CompletedList"/>
+                            </ScrollViewer>
+                        </DockPanel>
+                    </Border>
+                </Grid>
+
+                <!-- List View (Inside the same container for easier switching) -->
+                <Grid x:Name="TaskListViewGrid" Visibility="Collapsed">
+                    <Border Style="{StaticResource GlassBorder}">
+                        <DockPanel>
+                            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,25">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="📝" Foreground="#8b5cf6" FontSize="20" Margin="0,0,10,0"/>
+                                    <TextBlock Text="任务列表" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                                </StackPanel>
+                                <Button Content="+ 添加任务" Click="AddTask_Click" HorizontalAlignment="Right" Style="{StaticResource PrimaryButtonStyle}"/>
+                            </DockPanel>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel x:Name="TaskListContainer"/>
+                            </ScrollViewer>
+                        </DockPanel>
+                    </Border>
+                </Grid>
             </Grid>
             
             <!-- Milestone View -->
@@ -354,23 +426,7 @@
                 </Border>
             </Grid>
 
-            <!-- List View -->
-            <Grid x:Name="TaskListViewGrid" Grid.Row="1" Visibility="Collapsed">
-                <Border Style="{StaticResource GlassBorder}">
-                    <DockPanel>
-                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,25">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="📝" Foreground="#8b5cf6" FontSize="20" Margin="0,0,10,0"/>
-                                <TextBlock Text="任务列表" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
-                            </StackPanel>
-                            <Button Content="+ 添加任务" Click="AddTask_Click" HorizontalAlignment="Right" Style="{StaticResource PrimaryButtonStyle}"/>
-                        </DockPanel>
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <StackPanel x:Name="TaskListContainer"/>
-                        </ScrollViewer>
-                    </DockPanel>
-                </Border>
-            </Grid>
+
 
             <!-- Calendar View -->
             <Grid x:Name="CalendarViewGrid" Grid.Row="1" Visibility="Collapsed">
