@@ -1,0 +1,50 @@
+[2026-03-18 13:30:34.664] [INFO] [Logger] 日志服务已初始化
+[2026-03-18 13:30:34.718] [INFO] [Logger] 日志文件路径: D:\Data\EXE\bin\Debug\net10.0-windows\logs\GamePrince_20260318.log
+[2026-03-18 13:30:34.719] [INFO] [Logger] 日志级别: Debug
+[2026-03-18 13:30:34.719] [INFO] [App] ========== GamePrince 启动 ==========
+[2026-03-18 13:30:34.720] [INFO] [App] 版本: 1.0.0
+[2026-03-18 13:30:34.721] [INFO] [App] 启动时间: 2026-03-18 13:30:34
+[2026-03-18 13:30:34.721] [INFO] [App] .NET 版本: 10.0.3
+[2026-03-18 13:30:34.721] [INFO] [App] 操作系统: Microsoft Windows NT 10.0.26200.0
+[2026-03-18 13:30:34.757] [INFO] [App] 应用程序启动完成
+[2026-03-18 13:30:35.029] [INFO] [DataService] 成功加载 11 个任务
+[2026-03-18 13:30:35.032] [INFO] [DataService] 成功加载 2 个里程碑
+[2026-03-18 13:30:35.034] [INFO] [DataService] 成功加载 2 个发布信息
+[2026-03-18 13:30:53.312] [INFO] [GitService] 成功获取 50 条提交记录
+[2026-03-18 13:30:53.624] [INFO] [GitService] 成功获取 2 个分支
+[2026-03-18 13:30:53.706] [INFO] [GitService] 成功获取 150 条提交记录
+[2026-03-18 13:30:56.172] [INFO] [GodotProjectService] 成功构建项目树: Polar
+[2026-03-18 13:30:56.183] [INFO] [GodotProjectService] 检测到 Godot 项目: Polar
+[2026-03-18 13:30:56.229] [INFO] [GodotProjectService] 资源统计完成: 总计 7597 个文件
+[2026-03-18 13:31:06.156] [DEBUG] [DataService] 成功保存 2 个里程碑
+[2026-03-18 13:31:11.797] [DEBUG] [DataService] 成功保存 2 个里程碑
+[2026-03-18 13:31:39.655] [DEBUG] [DataService] 成功保存 11 个任务
+[2026-03-18 13:31:43.573] [DEBUG] [DataService] 成功保存 11 个任务
+[2026-03-18 13:31:46.891] [DEBUG] [DataService] 成功保存 11 个任务
+[2026-03-18 13:31:50.510] [DEBUG] [DataService] 成功保存 11 个任务
+[2026-03-18 13:31:53.842] [DEBUG] [DataService] 成功保存 11 个任务
+[2026-03-18 13:31:57.384] [DEBUG] [DataService] 成功保存 11 个任务
+[2026-03-18 13:32:11.876] [DEBUG] [DataService] 成功保存 11 个任务
+[2026-03-18 13:32:12.777] [DEBUG] [DataService] 成功保存 11 个任务
+[2026-03-18 13:32:14.008] [DEBUG] [DataService] 成功保存 11 个任务
+[2026-03-18 13:32:18.162] [DEBUG] [DataService] 成功保存 11 个任务
+[2026-03-18 13:32:18.881] [DEBUG] [DataService] 成功保存 11 个任务
+[2026-03-18 13:32:23.066] [DEBUG] [DataService] 成功保存 11 个任务
+[2026-03-18 13:32:26.212] [DEBUG] [DataService] 成功保存 11 个任务
+[2026-03-18 13:32:34.789] [DEBUG] [DataService] 成功保存 11 个任务
+[2026-03-18 13:32:36.973] [DEBUG] [DataService] 成功保存 11 个任务
+[2026-03-18 13:32:52.541] [DEBUG] [GodotProjectService] 从缓存获取项目树
+[2026-03-18 13:32:52.547] [INFO] [GodotProjectService] 检测到 Godot 项目: Polar
+[2026-03-18 13:32:52.548] [DEBUG] [GodotProjectService] 从缓存获取资源统计
+[2026-03-18 13:32:57.468] [INFO] [GodotProjectService] 成功获取 0 个插件
+[2026-03-18 13:33:07.604] [DEBUG] [DataService] 成功保存 2 个发布信息
+[2026-03-18 13:33:13.813] [DEBUG] [DataService] 成功保存 2 个发布信息
+[2026-03-18 13:33:18.957] [INFO] [GodotProjectService] 成功获取 0 个插件
+[2026-03-18 13:33:21.079] [INFO] [GitService] 成功获取 100 条提交记录
+[2026-03-18 13:33:26.836] [DEBUG] [GodotProjectService] 从缓存获取项目树
+[2026-03-18 13:33:26.842] [INFO] [GodotProjectService] 检测到 Godot 项目: Polar
+[2026-03-18 13:33:26.843] [DEBUG] [GodotProjectService] 从缓存获取资源统计
+[2026-03-18 13:33:28.702] [DEBUG] [GodotProjectService] 从缓存获取项目树
+[2026-03-18 13:33:28.708] [INFO] [GodotProjectService] 检测到 Godot 项目: Polar
+[2026-03-18 13:33:28.708] [DEBUG] [GodotProjectService] 从缓存获取资源统计
+[2026-03-18 13:33:40.713] [INFO] [App] ========== GamePrince 退出 (ExitCode: 0) ==========

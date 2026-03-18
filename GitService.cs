@@ -52,12 +52,42 @@ namespace GamePrince
 
     public static class GitService
     {
+        private static readonly TimeSpan CacheExpiration = TimeSpan.FromMinutes(5);
+        private static readonly Dictionary<string, (DateTime Timestamp, object Data)> _cache = new();
+        private static readonly object _cacheLock = new object();
+
+        /// <summary>
+        /// 清除缓存
+        /// </summary>
+        public static void ClearCache()
+        {
+            lock (_cacheLock)
+            {
+                _cache.Clear();
+                LoggerService.Debug("GitService", "缓存已清除");
+            }
+        }
+
+        /// <summary>
+        /// 获取提交历史（带缓存）
+        /// </summary>
         public static List<GitCommit> GetCommitHistory(string projectPath, int limit = 50)
         {
             var commits = new List<GitCommit>();
             
             if (!Directory.Exists(Path.Combine(projectPath, ".git")))
+            {
+                LoggerService.Warning("GitService", $"目录不是Git仓库: {projectPath}");
                 return commits;
+            }
+
+            // 检查缓存
+            string cacheKey = $"commits_{projectPath}_{limit}";
+            if (TryGetCache(cacheKey, out var cached))
+            {
+                LoggerService.Debug("GitService", "从缓存获取提交历史");
+                return (List<GitCommit>)cached;
+            }
 
             try
             {
@@ -108,29 +138,61 @@ namespace GamePrince
                         process.WaitForExit();
                     }
                 }
+
+                LoggerService.Info("GitService", $"成功获取 {commits.Count} 条提交记录");
+                
+                // 存入缓存
+                SetCache(cacheKey, commits);
+            }
+            catch (System.ComponentModel.Win32Exception ex)
+            {
+                LoggerService.Error("GitService", $"Git未安装或不在PATH中: {ex.Message}", ex);
             }
             catch (Exception ex)
             {
-                // Git not installed or other error - log for debugging
-                System.Diagnostics.Debug.WriteLine($"Git error in GetCommitHistory: {ex.Message}");
+                LoggerService.Error("GitService", $"获取提交历史失败: {ex.Message}", ex);
             }
 
             return commits;
         }
 
+        /// <summary>
+        /// 获取活动热力图数据（带缓存）
+        /// </summary>
         public static Dictionary<DateTime, int> GetActivityHeatmap(string projectPath)
         {
+            // 检查缓存
+            string cacheKey = $"heatmap_{projectPath}";
+            if (TryGetCache(cacheKey, out var cached))
+            {
+                return (Dictionary<DateTime, int>)cached;
+            }
+
             // Get all commits without limit for heatmap
             var history = GetCommitHistory(projectPath, 10000);
-            return history
+            var result = history
                 .GroupBy(c => c.Date.Date)
                 .ToDictionary(g => g.Key, g => g.Count());
+
+            // 存入缓存
+            SetCache(cacheKey, result);
+            return result;
         }
 
+        /// <summary>
+        /// 获取总提交数
+        /// </summary>
         public static int GetTotalCommits(string projectPath)
         {
             if (!Directory.Exists(Path.Combine(projectPath, ".git")))
                 return 0;
+
+            // 检查缓存
+            string cacheKey = $"totalcommits_{projectPath}";
+            if (TryGetCache(cacheKey, out var cached))
+            {
+                return (int)cached;
+            }
 
             try
             {
@@ -152,6 +214,7 @@ namespace GamePrince
                         process.WaitForExit();
                         if (int.TryParse(output, out int count))
                         {
+                            SetCache(cacheKey, count);
                             return count;
                         }
                     }
@@ -159,7 +222,7 @@ namespace GamePrince
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Git error in GetTotalCommits: {ex.Message}");
+                LoggerService.Error("GitService", $"获取总提交数失败: {ex.Message}", ex);
             }
 
             return 0;
@@ -212,14 +275,24 @@ namespace GamePrince
         }
 
         /// <summary>
-        /// 获取 Git 分支列表
+        /// 获取分支列表
         /// </summary>
         public static List<GitBranch> GetBranches(string projectPath)
         {
             var branches = new List<GitBranch>();
             
             if (!Directory.Exists(Path.Combine(projectPath, ".git")))
+            {
+                LoggerService.Warning("GitService", $"目录不是Git仓库: {projectPath}");
                 return branches;
+            }
+
+            // 检查缓存
+            string cacheKey = $"branches_{projectPath}";
+            if (TryGetCache(cacheKey, out var cached))
+            {
+                return (List<GitBranch>)cached;
+            }
 
             try
             {
@@ -264,11 +337,17 @@ namespace GamePrince
                     string hash = GetBranchLastCommitHash(projectPath, branch.Name);
                     branch.LastCommitHash = hash;
                 }
+
+                LoggerService.Info("GitService", $"成功获取 {branches.Count} 个分支");
+                SetCache(cacheKey, branches);
+            }
+            catch (System.ComponentModel.Win32Exception ex)
+            {
+                LoggerService.Error("GitService", $"Git未安装或不在PATH中: {ex.Message}", ex);
             }
             catch (Exception ex)
             {
-                // Git not installed or other error - log for debugging
-                System.Diagnostics.Debug.WriteLine($"Git error: {ex.Message}");
+                LoggerService.Error("GitService", $"获取分支列表失败: {ex.Message}", ex);
             }
 
             return branches;
@@ -310,7 +389,10 @@ namespace GamePrince
             var detail = new GitCommitDetail { Hash = commitHash, FullHash = commitHash };
             
             if (!Directory.Exists(Path.Combine(projectPath, ".git")))
+            {
+                LoggerService.Warning("GitService", $"目录不是Git仓库: {projectPath}");
                 return detail;
+            }
 
             try
             {
@@ -392,10 +474,12 @@ namespace GamePrince
                         process.WaitForExit();
                     }
                 }
+
+                LoggerService.Debug("GitService", $"获取提交 {commitHash} 详情，包含 {detail.Changes.Count} 个文件变更");
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Git error in GetCommitDetail: {ex.Message}");
+                LoggerService.Error("GitService", $"获取提交详情失败: {ex.Message}", ex);
             }
 
             return detail;
@@ -534,6 +618,39 @@ namespace GamePrince
         public static List<string> GetBranchNames(string projectPath)
         {
             return GetBranches(projectPath).Select(b => b.Name).ToList();
+        }
+
+        /// <summary>
+        /// 尝试从缓存获取数据
+        /// </summary>
+        private static bool TryGetCache(string key, out object? data)
+        {
+            lock (_cacheLock)
+            {
+                if (_cache.TryGetValue(key, out var entry))
+                {
+                    if (DateTime.Now - entry.Timestamp < CacheExpiration)
+                    {
+                        data = entry.Data;
+                        return true;
+                    }
+                    // 过期移除
+                    _cache.Remove(key);
+                }
+                data = null;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 设置缓存
+        /// </summary>
+        private static void SetCache(string key, object data)
+        {
+            lock (_cacheLock)
+            {
+                _cache[key] = (DateTime.Now, data);
+            }
         }
     }
 }

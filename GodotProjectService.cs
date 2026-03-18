@@ -65,6 +65,22 @@ namespace GamePrince
 
     public static class GodotProjectService
     {
+        private static readonly TimeSpan CacheExpiration = TimeSpan.FromMinutes(5);
+        private static readonly Dictionary<string, (DateTime Timestamp, object Data)> _cache = new();
+        private static readonly object _cacheLock = new object();
+
+        /// <summary>
+        /// 清除所有缓存
+        /// </summary>
+        public static void ClearCache()
+        {
+            lock (_cacheLock)
+            {
+                _cache.Clear();
+                LoggerService.Debug("GodotProjectService", "缓存已清除");
+            }
+        }
+
         /// <summary>
         /// 检测指定目录是否为 Godot 项目
         /// </summary>
@@ -74,12 +90,24 @@ namespace GamePrince
         {
             var project = new GodotProject { Path = path };
 
-            if (string.IsNullOrEmpty(path) || !Directory.Exists(path))
+            if (string.IsNullOrEmpty(path))
+            {
+                LoggerService.Warning("GodotProjectService", "项目路径为空");
                 return project;
+            }
+
+            if (!Directory.Exists(path))
+            {
+                LoggerService.Warning("GodotProjectService", $"项目目录不存在: {path}");
+                return project;
+            }
 
             string projectGodotPath = Path.Combine(path, "project.godot");
             if (!File.Exists(projectGodotPath))
+            {
+                LoggerService.Debug("GodotProjectService", $"目录不是 Godot 项目（未找到 project.godot）: {path}");
                 return project;
+            }
 
             // 解析 project.godot 文件
             try
@@ -112,17 +140,22 @@ namespace GamePrince
                 }
 
                 project.IsValid = !string.IsNullOrEmpty(project.Name);
+                
+                if (project.IsValid)
+                {
+                    LoggerService.Info("GodotProjectService", $"检测到 Godot 项目: {project.Name}");
+                }
             }
-            catch
+            catch (Exception ex)
             {
-                // 解析失败，返回无效项目
+                LoggerService.Error("GodotProjectService", $"解析 project.godot 失败: {ex.Message}", ex);
             }
 
             return project;
         }
 
         /// <summary>
-        /// 获取项目的资源结构树
+        /// 获取项目的资源结构树（带缓存）
         /// </summary>
         /// <param name="projectPath">项目根目录</param>
         /// <param name="maxDepth">最大递归深度</param>
@@ -138,19 +171,32 @@ namespace GamePrince
             };
 
             if (string.IsNullOrEmpty(projectPath) || !Directory.Exists(projectPath))
+            {
+                LoggerService.Warning("GodotProjectService", $"项目目录不存在: {projectPath}");
                 return root;
+            }
+
+            // 检查缓存
+            string cacheKey = $"projecttree_{projectPath}_{maxDepth}";
+            if (TryGetCache(cacheKey, out var cached))
+            {
+                LoggerService.Debug("GodotProjectService", "从缓存获取项目树");
+                return (ProjectNode)cached;
+            }
 
             try
             {
                 BuildTree(root, projectPath, 1, maxDepth);
+                LoggerService.Info("GodotProjectService", $"成功构建项目树: {root.Name}");
+                SetCache(cacheKey, root);
             }
-            catch (UnauthorizedAccessException)
+            catch (UnauthorizedAccessException ex)
             {
-                // 忽略无权限访问的目录
+                LoggerService.Warning("GodotProjectService", $"无权限访问目录: {projectPath}");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // 忽略其他错误
+                LoggerService.Error("GodotProjectService", $"构建项目树失败: {ex.Message}", ex);
             }
 
             return root;
@@ -220,16 +266,27 @@ namespace GamePrince
         }
 
         /// <summary>
-        /// 获取项目的资源统计信息
+        /// 获取项目的资源统计信息（带缓存）
         /// </summary>
         /// <param name="projectPath">项目根目录</param>
         /// <returns>资源统计对象</returns>
         public static ResourceStats GetResourceStats(string projectPath)
         {
+            // 检查缓存
+            string cacheKey = $"resourcestats_{projectPath}";
+            if (TryGetCache(cacheKey, out var cached))
+            {
+                LoggerService.Debug("GodotProjectService", "从缓存获取资源统计");
+                return (ResourceStats)cached;
+            }
+
             var stats = new ResourceStats();
 
             if (string.IsNullOrEmpty(projectPath) || !Directory.Exists(projectPath))
+            {
+                LoggerService.Warning("GodotProjectService", $"项目目录不存在: {projectPath}");
                 return stats;
+            }
 
             try
             {
@@ -297,10 +354,13 @@ namespace GamePrince
                             break;
                     }
                 }
+
+                LoggerService.Info("GodotProjectService", $"资源统计完成: 总计 {stats.Total} 个文件");
+                SetCache(cacheKey, stats);
             }
-            catch
+            catch (Exception ex)
             {
-                // 忽略错误
+                LoggerService.Error("GodotProjectService", $"获取资源统计失败: {ex.Message}", ex);
             }
 
             return stats;
@@ -365,11 +425,17 @@ namespace GamePrince
             var plugins = new List<GodotPluginInfo>();
 
             if (string.IsNullOrEmpty(projectPath) || !Directory.Exists(projectPath))
+            {
+                LoggerService.Warning("GodotProjectService", $"项目目录不存在: {projectPath}");
                 return plugins;
+            }
 
             string pluginDir = Path.Combine(projectPath, "addons");
             if (!Directory.Exists(pluginDir))
+            {
+                LoggerService.Debug("GodotProjectService", "项目没有 addons 目录");
                 return plugins;
+            }
 
             try
             {
@@ -403,18 +469,20 @@ namespace GamePrince
                                     plugin.Version = line.Substring(8).Trim('"');
                             }
                         }
-                        catch
+                        catch (Exception ex)
                         {
-                            // 解析失败，使用默认名称
+                            LoggerService.Warning("GodotProjectService", $"解析插件配置失败: {pluginCfg}, {ex.Message}");
                         }
                     }
 
                     plugins.Add(plugin);
                 }
+
+                LoggerService.Info("GodotProjectService", $"成功获取 {plugins.Count} 个插件");
             }
-            catch
+            catch (Exception ex)
             {
-                // 忽略错误
+                LoggerService.Error("GodotProjectService", $"获取插件列表失败: {ex.Message}", ex);
             }
 
             return plugins;
@@ -428,7 +496,10 @@ namespace GamePrince
         public static bool OpenInEditor(string projectPath)
         {
             if (string.IsNullOrEmpty(projectPath) || !Directory.Exists(projectPath))
+            {
+                LoggerService.Warning("GodotProjectService", $"项目目录不存在: {projectPath}");
                 return false;
+            }
 
             // 常见的 Godot 可执行文件位置
             var godotExecutables = new[]
@@ -457,9 +528,13 @@ namespace GamePrince
                         Arguments = projectPath,
                         UseShellExecute = true
                     });
+                    LoggerService.Info("GodotProjectService", $"成功启动 Godot Editor: {projectGodotExe}");
                     return true;
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    LoggerService.Error("GodotProjectService", $"启动 Godot 失败: {ex.Message}", ex);
+                }
             }
 
             // 尝试在 PATH 中查找
@@ -474,15 +549,51 @@ namespace GamePrince
                         UseShellExecute = true
                     };
                     System.Diagnostics.Process.Start(startInfo);
+                    LoggerService.Info("GodotProjectService", $"成功启动 Godot Editor: {godotExe}");
                     return true;
                 }
-                catch
+                catch (Exception ex)
                 {
+                    LoggerService.Debug("GodotProjectService", $"尝试 {godotExe} 失败: {ex.Message}");
                     // 继续尝试下一个
                 }
             }
 
+            LoggerService.Warning("GodotProjectService", "无法找到 Godot 编辑器");
             return false;
+        }
+
+        /// <summary>
+        /// 尝试从缓存获取数据
+        /// </summary>
+        private static bool TryGetCache(string key, out object? data)
+        {
+            lock (_cacheLock)
+            {
+                if (_cache.TryGetValue(key, out var entry))
+                {
+                    if (DateTime.Now - entry.Timestamp < CacheExpiration)
+                    {
+                        data = entry.Data;
+                        return true;
+                    }
+                    // 过期移除
+                    _cache.Remove(key);
+                }
+                data = null;
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 设置缓存
+        /// </summary>
+        private static void SetCache(string key, object data)
+        {
+            lock (_cacheLock)
+            {
+                _cache[key] = (DateTime.Now, data);
+            }
         }
     }
 }
