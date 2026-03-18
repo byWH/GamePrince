@@ -1,0 +1,84 @@
+Date : 2026-03-16 17:52:59
+Directory : d:\Data\EXE
+Total : 43 files,  5791 codes, 279 comments, 1028 blanks, all 7098 lines
+
+Languages
++--------------------+------------+------------+------------+------------+------------+
+| language           | files      | code       | comment    | blank      | total      |
++--------------------+------------+------------+------------+------------+------------+
+| C#                 |         18 |      3,136 |        201 |        775 |      4,112 |
+| XAML               |          4 |      1,152 |         78 |         96 |      1,326 |
+| JSON               |          8 |        801 |          0 |          1 |        802 |
+| Markdown           |          8 |        458 |          0 |        152 |        610 |
+| JSON with Comments |          1 |        200 |          0 |          0 |        200 |
+| XML                |          3 |         26 |          0 |          3 |         29 |
+| Properties         |          1 |         18 |          0 |          1 |         19 |
++--------------------+------------+------------+------------+------------+------------+
+
+Directories
++--------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                       | files      | code       | comment    | blank      | total      |
++--------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                          |         43 |      5,791 |        279 |      1,028 |      7,098 |
+| . (Files)                                                                                  |         15 |      3,045 |        150 |        371 |      3,566 |
+| .vite                                                                                      |          2 |         11 |          0 |          1 |         12 |
+| .vite\deps                                                                                 |          2 |         11 |          0 |          1 |         12 |
+| bin                                                                                        |          2 |         42 |          0 |          0 |         42 |
+| bin\Debug                                                                                  |          2 |         42 |          0 |          0 |         42 |
+| bin\Debug\net10.0-windows                                                                  |          2 |         42 |          0 |          0 |         42 |
+| obj                                                                                        |         17 |      2,314 |        129 |        532 |      2,975 |
+| obj (Files)                                                                                |          4 |        744 |          0 |          0 |        744 |
+| obj\Debug                                                                                  |         13 |      1,570 |        129 |        532 |      2,231 |
+| obj\Debug\net10.0-windows                                                                  |         13 |      1,570 |        129 |        532 |      2,231 |
+| planning                                                                                   |          7 |        379 |          0 |        124 |        503 |
++--------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++--------------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| filename                                                                                   | language           | code       | comment    | blank      | total      |
++--------------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| d:\Data\EXE\.vite\deps\_metadata.json                                                      | JSON               |          8 |          0 |          0 |          8 |
+| d:\Data\EXE\.vite\deps\package.json                                                        | JSON               |          3 |          0 |          1 |          4 |
+| d:\Data\EXE\App.xaml                                                                       | XAML               |        344 |         17 |         17 |        378 |
+| d:\Data\EXE\App.xaml.cs                                                                    | C#                 |          7 |          0 |          2 |          9 |
+| d:\Data\EXE\DataService.cs                                                                 | C#                 |         67 |          0 |         10 |         77 |
+| d:\Data\EXE\GamePrince.csproj                                                              | XML                |          9 |          0 |          3 |         12 |
+| d:\Data\EXE\GitService.cs                                                                  | C#                 |        176 |          9 |         23 |        208 |
+| d:\Data\EXE\MainWindow.xaml                                                                | XAML               |        400 |         33 |         42 |        475 |
+| d:\Data\EXE\MainWindow.xaml.cs                                                             | C#                 |      1,156 |         60 |        177 |      1,393 |
+| d:\Data\EXE\MarkdownRenderer.cs                                                            | C#                 |         91 |          3 |         12 |        106 |
+| d:\Data\EXE\MilestoneEditDialog.xaml                                                       | XAML               |        166 |         13 |         16 |        195 |
+| d:\Data\EXE\MilestoneEditDialog.xaml.cs                                                    | C#                 |         37 |          0 |          7 |         44 |
+| d:\Data\EXE\README.md                                                                      | Markdown           |         79 |          0 |         28 |        107 |
+| d:\Data\EXE\TaskEditDialog.xaml                                                            | XAML               |        242 |         15 |         21 |        278 |
+| d:\Data\EXE\TaskEditDialog.xaml.cs                                                         | C#                 |         51 |          0 |         13 |         64 |
+| d:\Data\EXE\bin\Debug\net10.0-windows\GamePrince.deps.json                                 | JSON               |         23 |          0 |          0 |         23 |
+| d:\Data\EXE\bin\Debug\net10.0-windows\GamePrince.runtimeconfig.json                        | JSON               |         19 |          0 |          0 |         19 |
+| d:\Data\EXE\milestones.json                                                                | JSON               |         20 |          0 |          0 |         20 |
+| d:\Data\EXE\obj\Debug\net10.0-windows\.NETCoreApp,Version=v10.0.AssemblyAttributes.cs      | C#                 |          3 |          1 |          1 |          5 |
+| d:\Data\EXE\obj\Debug\net10.0-windows\App.g.cs                                             | C#                 |         52 |         17 |         14 |         83 |
+| d:\Data\EXE\obj\Debug\net10.0-windows\App.g.i.cs                                           | C#                 |         52 |         17 |         14 |         83 |
+| d:\Data\EXE\obj\Debug\net10.0-windows\GamePrince.AssemblyInfo.cs                           | C#                 |         11 |          9 |          5 |         25 |
+| d:\Data\EXE\obj\Debug\net10.0-windows\GamePrince.GeneratedMSBuildEditorConfig.editorconfig | Properties         |         18 |          0 |          1 |         19 |
+| d:\Data\EXE\obj\Debug\net10.0-windows\GamePrince.GlobalUsings.g.cs                         | C#                 |          5 |          1 |          1 |          7 |
+| d:\Data\EXE\obj\Debug\net10.0-windows\GamePrince.sourcelink.json                           | JSON               |          1 |          0 |          0 |          1 |
+| d:\Data\EXE\obj\Debug\net10.0-windows\MainWindow.g.cs                                      | C#                 |        466 |         14 |        171 |        651 |
+| d:\Data\EXE\obj\Debug\net10.0-windows\MainWindow.g.i.cs                                    | C#                 |        466 |         14 |        171 |        651 |
+| d:\Data\EXE\obj\Debug\net10.0-windows\MilestoneEditDialog.g.cs                             | C#                 |        112 |         14 |         34 |        160 |
+| d:\Data\EXE\obj\Debug\net10.0-windows\MilestoneEditDialog.g.i.cs                           | C#                 |        112 |         14 |         34 |        160 |
+| d:\Data\EXE\obj\Debug\net10.0-windows\TaskEditDialog.g.cs                                  | C#                 |        136 |         14 |         43 |        193 |
+| d:\Data\EXE\obj\Debug\net10.0-windows\TaskEditDialog.g.i.cs                                | C#                 |        136 |         14 |         43 |        193 |
+| d:\Data\EXE\obj\GamePrince.csproj.nuget.dgspec.json                                        | JSON               |        361 |          0 |          0 |        361 |
+| d:\Data\EXE\obj\GamePrince.csproj.nuget.g.props                                            | XML                |         15 |          0 |          0 |         15 |
+| d:\Data\EXE\obj\GamePrince.csproj.nuget.g.targets                                          | XML                |          2 |          0 |          0 |          2 |
+| d:\Data\EXE\obj\project.assets.json                                                        | JSON               |        366 |          0 |          0 |        366 |
+| d:\Data\EXE\planning\implementation_plan.md                                                | Markdown           |        164 |          0 |         53 |        217 |
+| d:\Data\EXE\planning\milestone_implementation_plan.md                                      | Markdown           |         33 |          0 |         10 |         43 |
+| d:\Data\EXE\planning\milestone_implementation_plan_v2.md                                   | Markdown           |         41 |          0 |         13 |         54 |
+| d:\Data\EXE\planning\task.md                                                               | Markdown           |         68 |          0 |         26 |         94 |
+| d:\Data\EXE\planning\task_internal.md                                                      | Markdown           |         17 |          0 |          2 |         19 |
+| d:\Data\EXE\planning\walkthrough.md                                                        | Markdown           |         24 |          0 |         11 |         35 |
+| d:\Data\EXE\planning\walkthrough_csharp.md                                                 | Markdown           |         32 |          0 |          9 |         41 |
+| d:\Data\EXE\tasks.json                                                                     | JSON with Comments |        200 |          0 |          0 |        200 |
+| Total                                                                                      |                    |      5,791 |        279 |      1,028 |      7,098 |
++--------------------------------------------------------------------------------------------+--------------------+------------+------------+------------+------------+
