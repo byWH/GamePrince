@@ -99,7 +99,7 @@ namespace GamePrince {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/GamePrince;V1.0.0.0;component/milestoneeditdialog.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/GamePrince;component/milestoneeditdialog.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\MilestoneEditDialog.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

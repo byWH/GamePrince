@@ -1,18 +1,18 @@
 ﻿GamePrince
-1.0.0.0
+
 
 winexe
 C#
 .cs
-d:\Data\EXE\obj\Debug\net10.0-windows\
+D:\Data\EXE\obj\Debug\net10.0-windows\
 GamePrince
 none
 false
 TRACE;DEBUG;NET;NET10_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NET9_0_OR_GREATER;NET10_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
-d:\Data\EXE\App.xaml
+D:\Data\EXE\App.xaml
 3-619985086
 
-11738981955
+9-395327220
 206-81868862
 MainWindow.xaml;MilestoneEditDialog.xaml;TaskEditDialog.xaml;
 

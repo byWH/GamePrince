@@ -397,6 +397,249 @@ namespace GamePrince
                 
                 BranchListContainer.Children.Add(branchBorder);
             }
+            
+            // Also update commit history
+            UpdateCommitHistoryView();
+        }
+        
+        private void UpdateCommitHistoryView()
+        {
+            CommitHistoryContainer.Children.Clear();
+            
+            if (string.IsNullOrEmpty(_currentProjectPath))
+            {
+                CommitHistoryContainer.Children.Add(new TextBlock 
+                { 
+                    Text = "请先选择项目目录", 
+                    Foreground = Brushes.Gray, 
+                    FontSize = 14,
+                    Margin = new Thickness(10)
+                });
+                return;
+            }
+            
+            string searchText = CommitSearchBox?.Text?.ToLower() ?? "";
+            var commits = GitService.GetCommitHistory(_currentProjectPath, 100);
+            
+            // Filter by search text
+            if (!string.IsNullOrEmpty(searchText))
+            {
+                commits = commits.Where(c => 
+                    c.Message.ToLower().Contains(searchText) ||
+                    c.Author.ToLower().Contains(searchText) ||
+                    c.Hash.ToLower().Contains(searchText)
+                ).ToList();
+            }
+            
+            if (commits.Count == 0)
+            {
+                CommitHistoryContainer.Children.Add(new TextBlock 
+                { 
+                    Text = string.IsNullOrEmpty(searchText) ? "暂无提交记录" : "没有找到匹配的提交", 
+                    Foreground = Brushes.Gray, 
+                    FontSize = 14,
+                    Margin = new Thickness(10)
+                });
+                return;
+            }
+            
+            foreach (var commit in commits)
+            {
+                var commitBorder = new Border
+                {
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e293b")),
+                    CornerRadius = new CornerRadius(4),
+                    Padding = new Thickness(12, 10, 12, 10),
+                    Margin = new Thickness(0, 0, 0, 8),
+                    Cursor = System.Windows.Input.Cursors.Hand
+                };
+                
+                var commitStack = new StackPanel();
+                
+                // Hash and date row
+                var headerRow = new DockPanel { Margin = new Thickness(0, 0, 0, 5) };
+                headerRow.Children.Add(new TextBlock 
+                { 
+                    Text = commit.Hash, 
+                    Foreground = Brushes.Cyan, 
+                    FontSize = 12,
+                    FontFamily = new FontFamily("Consolas")
+                });
+                headerRow.Children.Add(new TextBlock 
+                { 
+                    Text = commit.Date.ToString("yyyy-MM-dd HH:mm"), 
+                    Foreground = Brushes.Gray, 
+                    FontSize = 11,
+                    HorizontalAlignment = HorizontalAlignment.Right
+                });
+                commitStack.Children.Add(headerRow);
+                
+                // Message
+                commitStack.Children.Add(new TextBlock 
+                { 
+                    Text = commit.Message, 
+                    Foreground = Brushes.White, 
+                    FontSize = 13,
+                    TextWrapping = TextWrapping.Wrap,
+                    Margin = new Thickness(0, 0, 0, 5)
+                });
+                
+                // Author
+                commitStack.Children.Add(new TextBlock 
+                { 
+                    Text = $"👤 {commit.Author}", 
+                    Foreground = Brushes.Gray, 
+                    FontSize = 11
+                });
+                
+                commitBorder.Child = commitStack;
+                
+                // Click to show detail
+                commitBorder.MouseLeftButtonDown += (s, ev) => ShowCommitDetail(commit.Hash);
+                
+                CommitHistoryContainer.Children.Add(commitBorder);
+            }
+        }
+        
+        private void SearchCommits(object sender, RoutedEventArgs e)
+        {
+            UpdateCommitHistoryView();
+        }
+        
+        private void ShowCommitDetail(string commitHash)
+        {
+            if (string.IsNullOrEmpty(_currentProjectPath)) return;
+            
+            // Hide diff panel, show commit detail panel
+            DiffResultsPanel.Visibility = Visibility.Collapsed;
+            CommitDetailPanel.Visibility = Visibility.Visible;
+            
+            var detail = GitService.GetCommitDetail(_currentProjectPath, commitHash);
+            
+            // Clear previous content
+            CommitInfoContainer.Children.Clear();
+            CommitFilesContainer.Children.Clear();
+            
+            // Commit info header
+            var infoBorder = new Border
+            {
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e3a5f")),
+                CornerRadius = new CornerRadius(8),
+                Padding = new Thickness(15),
+                Margin = new Thickness(0, 0, 0, 15)
+            };
+            
+            var infoStack = new StackPanel();
+            
+            // Full hash
+            infoStack.Children.Add(new TextBlock 
+            { 
+                Text = detail.FullHash, 
+                Foreground = Brushes.Cyan, 
+                FontSize = 12,
+                FontFamily = new FontFamily("Consolas"),
+                Margin = new Thickness(0, 0, 0, 10)
+            });
+            
+            // Message
+            infoStack.Children.Add(new TextBlock 
+            { 
+                Text = detail.Message, 
+                Foreground = Brushes.White, 
+                FontSize = 16,
+                FontWeight = FontWeights.Bold,
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(0, 0, 0, 10)
+            });
+            
+            // Author and date
+            var metaStack = new StackPanel { Orientation = Orientation.Horizontal };
+            metaStack.Children.Add(new TextBlock 
+            { 
+                Text = $"👤 {detail.Author}", 
+                Foreground = Brushes.Gray, 
+                FontSize = 12,
+                Margin = new Thickness(0, 0, 20, 0)
+            });
+            metaStack.Children.Add(new TextBlock 
+            { 
+                Text = $"📅 {detail.Date:yyyy-MM-dd HH:mm:ss}", 
+                Foreground = Brushes.Gray, 
+                FontSize = 12
+            });
+            infoStack.Children.Add(metaStack);
+            
+            infoBorder.Child = infoStack;
+            CommitInfoContainer.Children.Add(infoBorder);
+            
+            // Files changed
+            if (detail.Changes.Count == 0)
+            {
+                CommitFilesContainer.Children.Add(new TextBlock 
+                { 
+                    Text = "此提交没有文件变更", 
+                    Foreground = Brushes.Gray, 
+                    FontSize = 14,
+                    Margin = new Thickness(10)
+                });
+            }
+            else
+            {
+                foreach (var change in detail.Changes)
+                {
+                    var changeBorder = new Border
+                    {
+                        Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e293b")),
+                        CornerRadius = new CornerRadius(4),
+                        Padding = new Thickness(12, 8, 12, 8),
+                        Margin = new Thickness(0, 0, 0, 5)
+                    };
+                    
+                    var changeGrid = new Grid();
+                    changeGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(50) });
+                    changeGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                    
+                    // Change type icon
+                    string icon = change.ChangeType switch
+                    {
+                        "Added" => "➕",
+                        "Modified" => "✏️",
+                        "Deleted" => "🗑️",
+                        "Renamed" => "📝",
+                        _ => "📄"
+                    };
+                    var iconColor = change.ChangeType switch
+                    {
+                        "Added" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10b981")),
+                        "Modified" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f59e0b")),
+                        "Deleted" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ef4444")),
+                        _ => Brushes.Gray
+                    };
+                    
+                    changeGrid.Children.Add(new TextBlock { Text = icon, FontSize = 14, VerticalAlignment = VerticalAlignment.Center });
+                    
+                    var fileText = new TextBlock 
+                    { 
+                        Text = change.FilePath, 
+                        Foreground = Brushes.White, 
+                        FontSize = 13,
+                        TextTrimming = TextTrimming.CharacterEllipsis,
+                        VerticalAlignment = VerticalAlignment.Center,
+                        Margin = new Thickness(10, 0, 0, 0)
+                    };
+                    Grid.SetColumn(fileText, 1);
+                    changeGrid.Children.Add(fileText);
+                    
+                    changeBorder.Child = changeGrid;
+                    CommitFilesContainer.Children.Add(changeBorder);
+                }
+            }
+        }
+        
+        private void BackToDiffList(object sender, RoutedEventArgs e)
+        {
+            CommitDetailPanel.Visibility = Visibility.Collapsed;
+            DiffResultsPanel.Visibility = Visibility.Visible;
         }
 
         private void RefreshGitDiff(object sender, RoutedEventArgs e)
@@ -1444,10 +1687,12 @@ namespace GamePrince
             while (startDate.DayOfWeek != DayOfWeek.Sunday)
                 startDate = startDate.AddDays(-1);
 
-            // GitHub uses 53 weeks to cover a full year
-            for (int week = 0; week < 53; week++)
+            // 正确的排列方式：列从左到右，每列7格
+            // 第一格对应周日（行0），第七格对应周六（行6）
+            // 使用 day 外层循环，week 内层循环，确保同一周的7天在同一列
+            for (int day = 0; day < 7; day++)
             {
-                for (int day = 0; day < 7; day++)
+                for (int week = 0; week < 53; week++)
                 {
                     DateTime current = startDate.AddDays(week * 7 + day);
                     // Skip future dates
@@ -1474,7 +1719,7 @@ namespace GamePrince
         {
             return level switch
             {
-                0 => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e293b")),
+                0 => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#334155")),
                 1 => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4c1d95")),
                 2 => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#7c3aed")),
                 3 => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#a78bfa")),

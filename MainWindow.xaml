@@ -476,14 +476,14 @@
             <!-- Git Diff/Compare View -->
             <Grid x:Name="GitDiffViewGrid" Grid.Row="1" Visibility="Collapsed">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="350"/>
+                    <ColumnDefinition Width="400"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 
-                <!-- Left: Branch/Commit Selection -->
+                <!-- Left: Branch/Commit Selection with Tabs -->
                 <Border Grid.Column="0" Style="{StaticResource GlassBorder}" Margin="0,0,10,0">
                     <DockPanel>
-                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,20">
+                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,15">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="🔀" Foreground="#8b5cf6" FontSize="20" Margin="0,0,10,0"/>
                                 <TextBlock Text="版本对比" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
@@ -491,49 +491,126 @@
                             <Button Content="🔄" Click="RefreshGitDiff" HorizontalAlignment="Right" Style="{StaticResource IconButton}" ToolTip="刷新"/>
                         </DockPanel>
                         
-                        <!-- Compare Controls -->
-                        <StackPanel>
-                            <TextBlock Text="源分支/提交" Foreground="#64748b" FontSize="12" Margin="0,0,0,8"/>
-                            <ComboBox x:Name="FromBranchCombo" Width="300" Margin="0,0,0,20" Background="#1e293b" Foreground="White"/>
+                        <!-- Tab Control for Branch Compare and Commit History -->
+                        <TabControl x:Name="GitDiffTabControl" Background="Transparent" BorderThickness="0">
+                            <TabControl.Resources>
+                                <Style TargetType="TabItem">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="Foreground" Value="#94a3b8"/>
+                                    <Setter Property="Padding" Value="15,8"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="TabItem">
+                                                <Border x:Name="Border" Background="{TemplateBinding Background}" 
+                                                        CornerRadius="4,4,0,0" Padding="{TemplateBinding Padding}" Margin="0,0,5,0">
+                                                    <ContentPresenter ContentSource="Header"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter TargetName="Border" Property="Background" Value="#3b82f6"/>
+                                                        <Setter Property="Foreground" Value="White"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </TabControl.Resources>
                             
-                            <TextBlock Text="目标分支/提交" Foreground="#64748b" FontSize="12" Margin="0,0,0,8"/>
-                            <ComboBox x:Name="ToBranchCombo" Width="300" Margin="0,0,0,20" Background="#1e293b" Foreground="White"/>
+                            <!-- Branch Compare Tab -->
+                            <TabItem Header="分支对比">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="500">
+                                    <StackPanel Margin="0,15,0,0">
+                                        <TextBlock Text="源分支/提交" Foreground="#64748b" FontSize="12" Margin="0,0,0,8"/>
+                                        <ComboBox x:Name="FromBranchCombo" Width="350" Margin="0,0,0,15" Background="#1e293b" Foreground="White"/>
+                                        
+                                        <TextBlock Text="目标分支/提交" Foreground="#64748b" FontSize="12" Margin="0,0,0,8"/>
+                                        <ComboBox x:Name="ToBranchCombo" Width="350" Margin="0,0,0,15" Background="#1e293b" Foreground="White"/>
+                                        
+                                        <Button Content="🔍 开始对比" Click="CompareCommits" Style="{StaticResource PrimaryButtonStyle}" Margin="0,5,0,0"/>
+                                        
+                                        <Border Height="1" Background="#1e293b" Margin="0,20,0,20"/>
+                                        
+                                        <!-- Branch List -->
+                                        <TextBlock Text="可用分支" Foreground="#64748b" FontSize="12" Margin="0,0,0,10"/>
+                                        <ScrollViewer MaxHeight="200" VerticalScrollBarVisibility="Auto">
+                                            <StackPanel x:Name="BranchListContainer"/>
+                                        </ScrollViewer>
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </TabItem>
                             
-                            <Button Content="🔍 开始对比" Click="CompareCommits" Style="{StaticResource PrimaryButtonStyle}" Margin="0,10,0,0"/>
-                            
-                            <Border Height="1" Background="#1e293b" Margin="0,25,0,25"/>
-                            
-                            <!-- Branch List -->
-                            <TextBlock Text="可用分支" Foreground="#64748b" FontSize="12" Margin="0,0,0,10"/>
-                            <ScrollViewer MaxHeight="300" VerticalScrollBarVisibility="Auto">
-                                <StackPanel x:Name="BranchListContainer"/>
-                            </ScrollViewer>
-                        </StackPanel>
+                            <!-- Commit History Tab -->
+                            <TabItem Header="提交历史">
+                                <DockPanel Margin="0,15,0,0">
+                                    <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+                                        <TextBlock Text="提交列表" Foreground="#64748b" FontSize="12" Margin="0,0,0,8"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBox x:Name="CommitSearchBox" Width="280" Background="#1e293b" Foreground="White" 
+                                                     BorderThickness="0" Padding="10,8" CaretBrush="White"/>
+                                            <Button Content="🔍" Click="SearchCommits" Style="{StaticResource IconButton}" Margin="5,0,0,0"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="450">
+                                        <StackPanel x:Name="CommitHistoryContainer"/>
+                                    </ScrollViewer>
+                                </DockPanel>
+                            </TabItem>
+                        </TabControl>
                     </DockPanel>
                 </Border>
                 
-                <!-- Right: Diff Results -->
-                <Border Grid.Column="1" Style="{StaticResource GlassBorder}">
-                    <DockPanel>
-                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,20">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="📊" Foreground="#8b5cf6" FontSize="20" Margin="0,0,10,0"/>
-                                <TextBlock Text="对比结果" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
-                            </StackPanel>
-                            <StackPanel x:Name="DiffStatsPanel" Orientation="Horizontal" HorizontalAlignment="Right" Visibility="Collapsed">
-                                <Border Background="#10b981" CornerRadius="4" Padding="8,4" Margin="0,0,10,0">
-                                    <TextBlock x:Name="DiffAdditionsText" Text="+0" Foreground="White" FontSize="12"/>
-                                </Border>
-                                <Border Background="#ef4444" CornerRadius="4" Padding="8,4">
-                                    <TextBlock x:Name="DiffDeletionsText" Text="-0" Foreground="White" FontSize="12"/>
-                                </Border>
-                            </StackPanel>
+                <!-- Right: Diff Results / Commit Detail -->
+                <Grid Grid.Column="1">
+                    <!-- Branch Compare Results -->
+                    <Border x:Name="DiffResultsPanel" Style="{StaticResource GlassBorder}">
+                        <DockPanel>
+                            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,20">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="📊" Foreground="#8b5cf6" FontSize="20" Margin="0,0,10,0"/>
+                                    <TextBlock x:Name="DiffResultTitle" Text="对比结果" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                                </StackPanel>
+                                <StackPanel x:Name="DiffStatsPanel" Orientation="Horizontal" HorizontalAlignment="Right" Visibility="Collapsed">
+                                    <Border Background="#10b981" CornerRadius="4" Padding="8,4" Margin="0,0,10,0">
+                                        <TextBlock x:Name="DiffAdditionsText" Text="+0" Foreground="White" FontSize="12"/>
+                                    </Border>
+                                    <Border Background="#ef4444" CornerRadius="4" Padding="8,4">
+                                        <TextBlock x:Name="DiffDeletionsText" Text="-0" Foreground="White" FontSize="12"/>
+                                    </Border>
+                                </StackPanel>
+                            </DockPanel>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel x:Name="DiffResultsContainer"/>
+                            </ScrollViewer>
                         </DockPanel>
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <StackPanel x:Name="DiffResultsContainer"/>
-                        </ScrollViewer>
-                    </DockPanel>
-                </Border>
+                    </Border>
+                    
+                    <!-- Commit Detail View (Hidden by default) -->
+                    <Border x:Name="CommitDetailPanel" Style="{StaticResource GlassBorder}" Visibility="Collapsed">
+                        <DockPanel>
+                            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,20">
+                                <Button Content="← 返回" Click="BackToDiffList" Style="{StaticResource IconButton}" 
+                                        HorizontalAlignment="Left" FontSize="14" Padding="10,5"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <TextBlock Text="📝" Foreground="#8b5cf6" FontSize="18" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="提交详情" Foreground="White" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </DockPanel>
+                            
+                            <!-- Commit Info -->
+                            <StackPanel x:Name="CommitInfoContainer" DockPanel.Dock="Top" Margin="0,0,0,20"/>
+                            
+                            <!-- Commit Files -->
+                            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+                                <TextBlock Text="变更文件" Foreground="#64748b" FontSize="14" FontWeight="SemiBold"/>
+                            </DockPanel>
+                            
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel x:Name="CommitFilesContainer"/>
+                            </ScrollViewer>
+                        </DockPanel>
+                    </Border>
+                </Grid>
             </Grid>
 
             <!-- Releases Management View -->

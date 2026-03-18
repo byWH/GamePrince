@@ -68,8 +68,12 @@ namespace GamePrince
                     WorkingDirectory = projectPath,
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
-                    CreateNoWindow = true
+                    CreateNoWindow = true,
+                    StandardOutputEncoding = System.Text.Encoding.UTF8
                 };
+
+                // 设置环境变量确保Git输出UTF-8编码
+                psi.EnvironmentVariables["LANG"] = "zh_CN.UTF-8";
 
                 using (Process? process = Process.Start(psi))
                 {
@@ -318,8 +322,10 @@ namespace GamePrince
                     WorkingDirectory = projectPath,
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
-                    CreateNoWindow = true
+                    CreateNoWindow = true,
+                    StandardOutputEncoding = System.Text.Encoding.UTF8
                 };
+                psi.EnvironmentVariables["LANG"] = "zh_CN.UTF-8";
 
                 using (Process? process = Process.Start(psi))
                 {
@@ -351,8 +357,10 @@ namespace GamePrince
                     WorkingDirectory = projectPath,
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
-                    CreateNoWindow = true
+                    CreateNoWindow = true,
+                    StandardOutputEncoding = System.Text.Encoding.UTF8
                 };
+                psi.EnvironmentVariables["LANG"] = "zh_CN.UTF-8";
 
                 using (Process? process = Process.Start(psi))
                 {
@@ -417,8 +425,10 @@ namespace GamePrince
                     WorkingDirectory = projectPath,
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
-                    CreateNoWindow = true
+                    CreateNoWindow = true,
+                    StandardOutputEncoding = System.Text.Encoding.UTF8
                 };
+                psi.EnvironmentVariables["LANG"] = "zh_CN.UTF-8";
 
                 using (Process? process = Process.Start(psi))
                 {
@@ -467,8 +477,10 @@ namespace GamePrince
                     WorkingDirectory = projectPath,
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
-                    CreateNoWindow = true
+                    CreateNoWindow = true,
+                    StandardOutputEncoding = System.Text.Encoding.UTF8
                 };
+                psi.EnvironmentVariables["LANG"] = "zh_CN.UTF-8";
 
                 using (Process? process = Process.Start(psi))
                 {

@@ -123,7 +123,7 @@ namespace GamePrince {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/GamePrince;V1.0.0.0;component/taskeditdialog.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/GamePrince;component/taskeditdialog.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\TaskEditDialog.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);

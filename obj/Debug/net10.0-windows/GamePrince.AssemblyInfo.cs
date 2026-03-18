@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GamePrince")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9d7b047c098875b97d64a557068cf3584ba9dfac")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6b2092ad147dc3e2fe9e4493b6277b823fe77ddc")]
 [assembly: System.Reflection.AssemblyProductAttribute("GamePrince")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GamePrince")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
