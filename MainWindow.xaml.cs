@@ -37,6 +37,101 @@ namespace GamePrince
                     UpdateKanban();
             };
             _uiTimer.Start();
+            
+            // 添加键盘快捷键支持
+            this.PreviewKeyDown += MainWindow_PreviewKeyDown;
+        }
+
+        /// <summary>
+        /// 处理键盘快捷键
+        /// </summary>
+        private void MainWindow_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            // Ctrl+N: 新建任务
+            if (e.Key == System.Windows.Input.Key.N && (System.Windows.Input.Keyboard.Modifiers & System.Windows.Input.ModifierKeys.Control) == System.Windows.Input.ModifierKeys.Control)
+            {
+                AddTask_Click(this, new RoutedEventArgs());
+                e.Handled = true;
+                return;
+            }
+            
+            // Ctrl+F: 聚焦搜索框
+            if (e.Key == System.Windows.Input.Key.F && (System.Windows.Input.Keyboard.Modifiers & System.Windows.Input.ModifierKeys.Control) == System.Windows.Input.ModifierKeys.Control)
+            {
+                SearchBox.Focus();
+                e.Handled = true;
+                return;
+            }
+            
+            // F5: 刷新
+            if (e.Key == System.Windows.Input.Key.F5)
+            {
+                if (GitDiffViewGrid.Visibility == Visibility.Visible)
+                    RefreshGitDiff(this, new RoutedEventArgs());
+                else if (ResourcesViewGrid.Visibility == Visibility.Visible)
+                    RefreshResourceTree(this, new RoutedEventArgs());
+                else if (PluginsViewGrid.Visibility == Visibility.Visible)
+                    RefreshPlugins(this, new RoutedEventArgs());
+                else
+                    ReloadProjectData();
+                e.Handled = true;
+                return;
+            }
+            
+            // Ctrl+S: 保存数据
+            if (e.Key == System.Windows.Input.Key.S && (System.Windows.Input.Keyboard.Modifiers & System.Windows.Input.ModifierKeys.Control) == System.Windows.Input.ModifierKeys.Control)
+            {
+                DataService.SaveTasks(_tasks);
+                DataService.SaveMilestones(_milestones);
+                DataService.SaveReleases(_releases);
+                LoggerService.Info("MainWindow", "手动保存数据");
+                e.Handled = true;
+                return;
+            }
+            
+            // Ctrl+1-9: 快速导航
+            if ((System.Windows.Input.Keyboard.Modifiers & System.Windows.Input.ModifierKeys.Control) == System.Windows.Input.ModifierKeys.Control)
+            {
+                switch (e.Key)
+                {
+                    case System.Windows.Input.Key.D1: // Ctrl+1: 项目概览
+                        ShowProjectOverview(this, new RoutedEventArgs());
+                        e.Handled = true;
+                        break;
+                    case System.Windows.Input.Key.D2: // Ctrl+2: 任务管理
+                        ShowTaskManagement(this, new RoutedEventArgs());
+                        e.Handled = true;
+                        break;
+                    case System.Windows.Input.Key.D3: // Ctrl+3: 开发计划
+                        ShowPlan(this, new RoutedEventArgs());
+                        e.Handled = true;
+                        break;
+                    case System.Windows.Input.Key.D4: // Ctrl+4: 热力图
+                        ShowHeatmap(this, new RoutedEventArgs());
+                        e.Handled = true;
+                        break;
+                    case System.Windows.Input.Key.D5: // Ctrl+5: 资源浏览器
+                        ShowResources(this, new RoutedEventArgs());
+                        e.Handled = true;
+                        break;
+                    case System.Windows.Input.Key.D6: // Ctrl+6: 日历视图
+                        ShowCalendar(this, new RoutedEventArgs());
+                        e.Handled = true;
+                        break;
+                    case System.Windows.Input.Key.D7: // Ctrl+7: 工时周报
+                        ShowWeeklyReport(this, new RoutedEventArgs());
+                        e.Handled = true;
+                        break;
+                    case System.Windows.Input.Key.D8: // Ctrl+8: 版本对比
+                        ShowGitDiff(this, new RoutedEventArgs());
+                        e.Handled = true;
+                        break;
+                    case System.Windows.Input.Key.D9: // Ctrl+9: 发布管理
+                        ShowReleases(this, new RoutedEventArgs());
+                        e.Handled = true;
+                        break;
+                }
+            }
         }
 
         private void SelectProject_Click(object sender, RoutedEventArgs e)
@@ -243,6 +338,8 @@ namespace GamePrince
             // Default to Kanban view every time we enter
             KanbanViewButton.IsChecked = true;
             SwitchToKanbanView(this, new RoutedEventArgs());
+            
+            // 确保工具栏显示导出按钮（如果需要动态添加）
         }
 
         private void SwitchToKanbanView(object sender, RoutedEventArgs e)
@@ -343,7 +440,32 @@ namespace GamePrince
 
         private void UpdateGitDiffView()
         {
-            if (string.IsNullOrEmpty(_currentProjectPath)) return;
+            // 空状态检查：没有选择项目时显示提示
+            if (string.IsNullOrEmpty(_currentProjectPath))
+            {
+                // 清空分支列表
+                BranchListContainer.Children.Clear();
+                CommitHistoryContainer.Children.Clear();
+                
+                // 显示空状态
+                var emptyState = new Border
+                {
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e293b")),
+                    CornerRadius = new CornerRadius(12),
+                    Padding = new Thickness(40),
+                    Margin = new Thickness(0, 20, 0, 0)
+                };
+                var emptyStack = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
+                emptyStack.Children.Add(new TextBlock { Text = "📂", FontSize = 48, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 15) });
+                emptyStack.Children.Add(new TextBlock { Text = "请先选择项目目录", Foreground = Brushes.White, FontSize = 18, FontWeight = FontWeights.Bold, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 10) });
+                emptyStack.Children.Add(new TextBlock { Text = "点击左上角按钮选择一个包含 Git 仓库的项目", Foreground = Brushes.Gray, FontSize = 14, HorizontalAlignment = HorizontalAlignment.Center });
+                emptyState.Child = emptyStack;
+                
+                // 添加到主容器（需要在 XAML 中有对应的容器）
+                // 这里我们添加到 BranchListContainer 旁边
+                BranchListContainer.Children.Add(emptyState);
+                return;
+            }
             
             // Load branches
             var branches = GitService.GetBranches(_currentProjectPath);
@@ -360,42 +482,56 @@ namespace GamePrince
             
             // Update branch list
             BranchListContainer.Children.Clear();
-            foreach (var branch in branches)
+            if (branches.Count == 0)
             {
-                var branchBorder = new Border
-                {
-                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e293b")),
-                    CornerRadius = new CornerRadius(4),
-                    Padding = new Thickness(10, 8, 10, 8),
-                    Margin = new Thickness(0, 0, 0, 5),
-                    Cursor = System.Windows.Input.Cursors.Hand
-                };
-                
-                var branchStack = new StackPanel { Orientation = Orientation.Horizontal };
-                branchStack.Children.Add(new TextBlock 
+                var emptyBranches = new TextBlock 
                 { 
-                    Text = branch.IsCurrent ? "✓ " : "  ", 
-                    Foreground = branch.IsCurrent ? Brushes.Green : Brushes.Transparent, 
-                    FontSize = 12 
-                });
-                branchStack.Children.Add(new TextBlock 
-                { 
-                    Text = branch.IsCurrent ? $"🌿 {branch.Name}" : branch.Name, 
-                    Foreground = branch.IsCurrent ? Brushes.Cyan : Brushes.White, 
-                    FontSize = 13 
-                });
-                branchBorder.Child = branchStack;
-                
-                // Click to select
-                branchBorder.MouseLeftButtonDown += (s, ev) =>
-                {
-                    if (ToBranchCombo.SelectedItem?.ToString() != branch.Name)
-                        ToBranchCombo.SelectedItem = branch.Name;
-                    else
-                        FromBranchCombo.SelectedItem = branch.Name;
+                    Text = "此项目没有 Git 分支", 
+                    Foreground = Brushes.Gray, 
+                    FontSize = 14,
+                    Margin = new Thickness(10)
                 };
-                
-                BranchListContainer.Children.Add(branchBorder);
+                BranchListContainer.Children.Add(emptyBranches);
+            }
+            else
+            {
+                foreach (var branch in branches)
+                {
+                    var branchBorder = new Border
+                    {
+                        Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e293b")),
+                        CornerRadius = new CornerRadius(4),
+                        Padding = new Thickness(10, 8, 10, 8),
+                        Margin = new Thickness(0, 0, 0, 5),
+                        Cursor = System.Windows.Input.Cursors.Hand
+                    };
+                    
+                    var branchStack = new StackPanel { Orientation = Orientation.Horizontal };
+                    branchStack.Children.Add(new TextBlock 
+                    { 
+                        Text = branch.IsCurrent ? "✓ " : "  ", 
+                        Foreground = branch.IsCurrent ? Brushes.Green : Brushes.Transparent, 
+                        FontSize = 12 
+                    });
+                    branchStack.Children.Add(new TextBlock 
+                    { 
+                        Text = branch.IsCurrent ? $"🌿 {branch.Name}" : branch.Name, 
+                        Foreground = branch.IsCurrent ? Brushes.Cyan : Brushes.White, 
+                        FontSize = 13 
+                    });
+                    branchBorder.Child = branchStack;
+                    
+                    // Click to select
+                    branchBorder.MouseLeftButtonDown += (s, ev) =>
+                    {
+                        if (ToBranchCombo.SelectedItem?.ToString() != branch.Name)
+                            ToBranchCombo.SelectedItem = branch.Name;
+                        else
+                            FromBranchCombo.SelectedItem = branch.Name;
+                    };
+                    
+                    BranchListContainer.Children.Add(branchBorder);
+                }
             }
             
             // Also update commit history
@@ -888,12 +1024,36 @@ namespace GamePrince
 
         private void UpdateResourceStats()
         {
+            // 空状态检查：没有选择项目时显示提示
+            if (string.IsNullOrEmpty(_currentProjectPath))
+            {
+                ResourceDetailsContainer.Children.Clear();
+                
+                var emptyState = new Border
+                {
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e293b")),
+                    CornerRadius = new CornerRadius(12),
+                    Padding = new Thickness(40),
+                    Margin = new Thickness(0, 20, 0, 0)
+                };
+                var emptyStack = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
+                emptyStack.Children.Add(new TextBlock { Text = "📁", FontSize = 48, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 15) });
+                emptyStack.Children.Add(new TextBlock { Text = "请先选择项目目录", Foreground = Brushes.White, FontSize = 18, FontWeight = FontWeights.Bold, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 10) });
+                emptyStack.Children.Add(new TextBlock { Text = "点击左上角按钮选择一个项目", Foreground = Brushes.Gray, FontSize = 14, HorizontalAlignment = HorizontalAlignment.Center });
+                emptyState.Child = emptyStack;
+                ResourceDetailsContainer.Children.Add(emptyState);
+                
+                // 清空统计卡片
+                StatScripts.Text = "0";
+                StatScenes.Text = "0";
+                StatTextures.Text = "0";
+                StatAudio.Text = "0";
+                return;
+            }
+            
             // Detect Godot project
             GodotProject godotProject = null;
-            if (!string.IsNullOrEmpty(_currentProjectPath))
-            {
-                godotProject = GodotProjectService.DetectProject(_currentProjectPath);
-            }
+            godotProject = GodotProjectService.DetectProject(_currentProjectPath);
             
             // Update Godot project banner
             if (godotProject != null && godotProject.IsValid)
@@ -1648,17 +1808,105 @@ namespace GamePrince
                 Tags = new List<string> { "待定" },
                 MilestoneId = MilestoneFilter.SelectedValue?.ToString() ?? ""
             };
-            _tasks.Add(newTask);
-            DataService.SaveTasks(_tasks);
             
-            // 根据当前视图类型刷新对应的视图
-            if (TaskListViewGrid.Visibility == Visibility.Visible)
+            // 立即打开编辑对话框，让用户填写详细信息
+            var editDialog = new TaskEditDialog(newTask, _milestones) { Owner = this };
+            if (editDialog.ShowDialog() == true)
             {
-                UpdateListView();
+                // 用户确认保存，添加到列表
+                _tasks.Add(newTask);
+                DataService.SaveTasks(_tasks);
+                
+                // 根据当前视图类型刷新对应的视图
+                if (TaskListViewGrid.Visibility == Visibility.Visible)
+                {
+                    UpdateListView();
+                }
+                else
+                {
+                    UpdateKanban();
+                }
             }
-            else
+        }
+
+        /// <summary>
+        /// 导出任务为 CSV 文件
+        /// </summary>
+        private void ExportTasksToCsv()
+        {
+            var dialog = new Microsoft.Win32.SaveFileDialog
             {
-                UpdateKanban();
+                Title = "导出任务",
+                Filter = "CSV 文件 (*.csv)|*.csv",
+                DefaultExt = ".csv",
+                FileName = $"tasks_{DateTime.Now:yyyyMMdd}"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                try
+                {
+                    var lines = new List<string>
+                    {
+                        "标题,描述,分类,状态,紧急度,重要度,标签,里程碑,创建日期,完成日期,截止日期,预计工时,已记录工时"
+                    };
+
+                    foreach (var task in _tasks)
+                    {
+                        var milestone = _milestones.FirstOrDefault(m => m.Id == task.MilestoneId);
+                        var line = $"\"{task.Title.Replace("\"", "\"\"")}\",\"{task.Description.Replace("\"", "\"\"")}\",\"{task.Category}\",\"{task.Status}\",{task.Urgency},{task.Importance},\"{string.Join(";", task.Tags)}\",\"{milestone?.Title ?? ""}\",\"{task.DateCreated}\",\"{task.DateCompleted ?? ""}\",\"{task.DueDate ?? ""}\",{task.EstimatedHours},{task.LoggedHours}";
+                        lines.Add(line);
+                    }
+
+                    System.IO.File.WriteAllLines(dialog.FileName, lines, System.Text.Encoding.UTF8);
+                    MessageBox.Show($"已成功导出 {_tasks.Count} 个任务到 CSV 文件！", "导出成功", MessageBoxButton.OK, MessageBoxImage.Information);
+                    LoggerService.Info("MainWindow", $"导出任务到 CSV: {dialog.FileName}");
+                }
+                catch (Exception ex)
+                {
+                    LoggerService.Error("MainWindow", $"导出任务失败: {ex.Message}", ex);
+                    MessageBox.Show($"导出失败: {ex.Message}", "导出错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 导出里程碑为 CSV 文件
+        /// </summary>
+        private void ExportMilestonesToCsv()
+        {
+            var dialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Title = "导出里程碑",
+                Filter = "CSV 文件 (*.csv)|*.csv",
+                DefaultExt = ".csv",
+                FileName = $"milestones_{DateTime.Now:yyyyMMdd}"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                try
+                {
+                    var lines = new List<string>
+                    {
+                        "标题,版本,描述,开始日期,目标日期,是否完成"
+                    };
+
+                    foreach (var milestone in _milestones)
+                    {
+                        var line = $"\"{milestone.Title.Replace("\"", "\"\"")}\",\"{milestone.Version}\",\"{milestone.Description.Replace("\"", "\"\"")}\",\"{milestone.StartDate}\",\"{milestone.TargetDate}\",\"{(milestone.IsCompleted ? "是" : "否")}\"";
+                        lines.Add(line);
+                    }
+
+                    System.IO.File.WriteAllLines(dialog.FileName, lines, System.Text.Encoding.UTF8);
+                    MessageBox.Show($"已成功导出 {_milestones.Count} 个里程碑到 CSV 文件！", "导出成功", MessageBoxButton.OK, MessageBoxImage.Information);
+                    LoggerService.Info("MainWindow", $"导出里程碑到 CSV: {dialog.FileName}");
+                }
+                catch (Exception ex)
+                {
+                    LoggerService.Error("MainWindow", $"导出里程碑失败: {ex.Message}", ex);
+                    MessageBox.Show($"导出失败: {ex.Message}", "导出错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
         }
 
@@ -1752,6 +2000,25 @@ namespace GamePrince
             header.Children.Add(title);
             header.Children.Add(btnAdd);
             MilestoneList.Children.Add(header);
+
+            // 空状态检查
+            if (_milestones.Count == 0)
+            {
+                var emptyState = new Border
+                {
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e293b")),
+                    CornerRadius = new CornerRadius(12),
+                    Padding = new Thickness(40),
+                    Margin = new Thickness(0, 20, 0, 0)
+                };
+                var emptyStack = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
+                emptyStack.Children.Add(new TextBlock { Text = "🎯", FontSize = 48, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 15) });
+                emptyStack.Children.Add(new TextBlock { Text = "暂无里程碑", Foreground = Brushes.White, FontSize = 18, FontWeight = FontWeights.Bold, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, 10) });
+                emptyStack.Children.Add(new TextBlock { Text = "点击右上角按钮创建第一个里程碑", Foreground = Brushes.Gray, FontSize = 14, HorizontalAlignment = HorizontalAlignment.Center });
+                emptyState.Child = emptyStack;
+                MilestoneList.Children.Add(emptyState);
+                return;
+            }
 
             // Create a vertical StackPanel for list layout
             var verticalStack = new StackPanel();
@@ -1951,6 +2218,28 @@ namespace GamePrince
                 Grid.SetColumnSpan(bottomContainer, 3); // 跨越全部三列，保证填满底部
 
                 mainGrid.Children.Add(bottomContainer);
+            }
+            else if (total > 0)
+            {
+                // 有任务但没有燃尽图，显示提示
+                var hintContainer = new Grid { Margin = new Thickness(0, 15, 0, 0) };
+                var hintBorder = new Border
+                {
+                    Background = new SolidColorBrush(Color.FromArgb(20, 255, 255, 255)),
+                    CornerRadius = new CornerRadius(4),
+                    Padding = new Thickness(10)
+                };
+                var hintStack = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center };
+                hintStack.Children.Add(new TextBlock { Text = "📊", FontSize = 14, Margin = new Thickness(0, 0, 8, 0) });
+                hintStack.Children.Add(new TextBlock { Text = string.IsNullOrEmpty(milestone.TargetDate) ? "设置目标日期以显示燃尽图" : "暂无足够数据绘制燃尽图", Foreground = Brushes.Gray, FontSize = 12 });
+                hintBorder.Child = hintStack;
+                hintContainer.Children.Add(hintBorder);
+                
+                Grid.SetRow(hintContainer, 1);
+                Grid.SetColumn(hintContainer, 0);
+                Grid.SetColumnSpan(hintContainer, 3);
+
+                mainGrid.Children.Add(hintContainer);
             }
 
             // 组合并返回
