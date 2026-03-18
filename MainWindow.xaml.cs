@@ -2587,9 +2587,35 @@ namespace GamePrince
             var btnSave = new Button { Content = "保存", Padding = new Thickness(20, 8, 20, 8), Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8b5cf6")), Foreground = Brushes.White, BorderThickness = new Thickness(0) };
             btnSave.Click += (s, ev) =>
             {
-                newRelease.Version = versionInput.Text;
-                newRelease.Title = titleInput.Text;
-                newRelease.ReleaseDate = dateInput.Text;
+                // 验证版本号不能为空
+                if (string.IsNullOrWhiteSpace(versionInput.Text))
+                {
+                    MessageBox.Show("版本号不能为空！", "验证错误", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    versionInput.Focus();
+                    return;
+                }
+
+                // 验证标题不能为空
+                if (string.IsNullOrWhiteSpace(titleInput.Text))
+                {
+                    MessageBox.Show("标题不能为空！", "验证错误", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    titleInput.Focus();
+                    return;
+                }
+
+                // 验证日期格式（如果输入了日期）
+                string dateText = dateInput.Text.Trim();
+                if (!string.IsNullOrEmpty(dateText) && !DateTime.TryParse(dateText, out _))
+                {
+                    MessageBox.Show("日期格式不正确，请使用 YYYY-MM-DD 格式！", "验证错误", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    dateInput.Focus();
+                    return;
+                }
+
+                // 所有验证通过
+                newRelease.Version = versionInput.Text.Trim();
+                newRelease.Title = titleInput.Text.Trim();
+                newRelease.ReleaseDate = dateText;
                 newRelease.Status = statusCombo.SelectedItem?.ToString() ?? "Planning";
                 versionDialog.DialogResult = true;
             };
@@ -2648,9 +2674,35 @@ namespace GamePrince
             var btnSave = new Button { Content = "保存", Padding = new Thickness(20, 8, 20, 8), Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8b5cf6")), Foreground = Brushes.White, BorderThickness = new Thickness(0) };
             btnSave.Click += (s, ev) =>
             {
-                release.Version = versionInput.Text;
-                release.Title = titleInput.Text;
-                release.ReleaseDate = dateInput.Text;
+                // 验证版本号不能为空
+                if (string.IsNullOrWhiteSpace(versionInput.Text))
+                {
+                    MessageBox.Show("版本号不能为空！", "验证错误", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    versionInput.Focus();
+                    return;
+                }
+
+                // 验证标题不能为空
+                if (string.IsNullOrWhiteSpace(titleInput.Text))
+                {
+                    MessageBox.Show("标题不能为空！", "验证错误", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    titleInput.Focus();
+                    return;
+                }
+
+                // 验证日期格式（如果输入了日期）
+                string dateText = dateInput.Text.Trim();
+                if (!string.IsNullOrEmpty(dateText) && !DateTime.TryParse(dateText, out _))
+                {
+                    MessageBox.Show("日期格式不正确，请使用 YYYY-MM-DD 格式！", "验证错误", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    dateInput.Focus();
+                    return;
+                }
+
+                // 所有验证通过
+                release.Version = versionInput.Text.Trim();
+                release.Title = titleInput.Text.Trim();
+                release.ReleaseDate = dateText;
                 release.Status = statusCombo.SelectedItem?.ToString() ?? "Planning";
                 editDialog.DialogResult = true;
             };
