@@ -1105,7 +1105,8 @@ namespace GamePrince
             // Create detailed stats
             var details = new List<(string Name, string Icon, int Count, string Color)>
             {
-                ("GDScript 脚本 (.gd)", "📜", stats.Scripts, "#06b6d4"),
+                ("C# 脚本 (.cs)", "📜", stats.Scripts, "#06b6d4"),
+                ("GDScript 脚本 (.gd)", "📜", stats.GDScripts, "#0891b2"),
                 ("场景文件 (.tscn)", "🎬", stats.Scenes, "#f59e0b"),
                 ("资源文件 (.tres)", "📦", stats.Resources, "#10b981"),
                 ("着色器 (.gdshader)", "🎨", stats.Shaders, "#ec4899"),
@@ -1921,9 +1922,16 @@ namespace GamePrince
             };
         }
 
+        private void ApplyChartFilter_Click(object sender, RoutedEventArgs e)
+        {
+            PopulateCodeLinesChart();
+        }
+
         private void PopulateHeatmap()
         {
             HeatmapGrid.Children.Clear();
+            CodeLinesChartContainer.Children.Clear();
+            
             var activity = string.IsNullOrEmpty(_currentProjectPath)
                 ? new Dictionary<DateTime, int>()
                 : GitService.GetActivityHeatmap(_currentProjectPath);
@@ -1961,6 +1969,146 @@ namespace GamePrince
                     HeatmapGrid.Children.Add(border);
                 }
             }
+            
+            // Populate code lines bar chart
+            PopulateCodeLinesChart();
+        }
+
+        private void PopulateCodeLinesChart()
+        {
+            CodeLinesChartContainer.Children.Clear();
+            
+            if (string.IsNullOrEmpty(_currentProjectPath))
+            {
+                CodeLinesChartContainer.Children.Add(new TextBlock 
+                { 
+                    Text = "请先选择项目目录", 
+                    Foreground = Brushes.Gray, 
+                    FontSize = 14,
+                    Margin = new Thickness(10)
+                });
+                return;
+            }
+            
+            var dailyCodeLines = GitService.GetDailyCodeLines(_currentProjectPath);
+            
+            // Get last 364 days of data to match heatmap duration
+            DateTime endDate = DateTime.Now.Date;
+            DateTime startDate = endDate.AddDays(-364);
+            
+            // Get filter threshold
+            int filterThreshold = 0;
+            try {
+                filterThreshold = int.Parse(FilterThresholdBox?.Text ?? "0");
+            } catch { filterThreshold = 0; }
+            
+            // Get zoom level
+            double zoomLevel = ChartZoomSlider?.Value ?? 2;
+            
+            var chartData = new List<(DateTime Date, int Added, int Deleted)>();
+            for (var date = startDate; date <= endDate; date = date.AddDays(1))
+            {
+                if (dailyCodeLines.TryGetValue(date, out var data))
+                {
+                    int totalLines = data.Added + data.Deleted;
+                    // Filter: only include days with code changes below threshold (or threshold is 0)
+                    if (filterThreshold == 0 || totalLines <= filterThreshold)
+                    {
+                        chartData.Add((date, data.Added, data.Deleted));
+                    }
+                }
+                else
+                {
+                    chartData.Add((date, 0, 0));
+                }
+            }
+            
+            if (chartData.All(d => d.Added == 0 && d.Deleted == 0))
+            {
+                CodeLinesChartContainer.Children.Add(new TextBlock 
+                { 
+                    Text = "暂无代码量数据", 
+                    Foreground = Brushes.Gray, 
+                    FontSize = 14,
+                    Margin = new Thickness(10)
+                });
+                return;
+            }
+            
+            // Find max value for scaling
+            int maxValue = Math.Max(
+                chartData.Max(d => d.Added),
+                chartData.Max(d => d.Deleted)
+            );
+            if (maxValue == 0) maxValue = 1;
+            
+            // Create chart container
+            var chartGrid = new Grid { Height = 100 };
+            
+            // Calculate width based on zoom level (each day takes about 25 * zoomLevel pixels)
+            double chartWidth = Math.Max(chartData.Count * 25 * zoomLevel, 800);
+            chartGrid.Width = chartWidth;
+            
+            // Add columns for each day
+            for (int i = 0; i < chartData.Count; i++)
+            {
+                var dayData = chartData[i];
+                
+                var column = new ColumnDefinition { Width = new GridLength(25 * zoomLevel) };
+                chartGrid.ColumnDefinitions.Add(column);
+                
+                // Create a container for this day's bars
+                var dayContainer = new StackPanel { Orientation = Orientation.Vertical, HorizontalAlignment = HorizontalAlignment.Center };
+                
+                // Added lines bar (green, grows from top)
+                double addedHeight = Math.Max((double)dayData.Added / maxValue * 80, dayData.Added > 0 ? 2 : 0);
+                var addedBar = new Border 
+                { 
+                    Width = 10 * zoomLevel, 
+                    Height = addedHeight,
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10b981")),
+                    CornerRadius = new CornerRadius(2, 2, 0, 0),
+                    Margin = new Thickness(0, 0, 0, 1),
+                    VerticalAlignment = VerticalAlignment.Bottom,
+                    ToolTip = $"{dayData.Date:MM/dd}: +{dayData.Added} lines"
+                };
+                
+                // Deleted lines bar (red, grows from bottom)
+                double deletedHeight = Math.Max((double)dayData.Deleted / maxValue * 80, dayData.Deleted > 0 ? 2 : 0);
+                var deletedBar = new Border 
+                { 
+                    Width = 10 * zoomLevel, 
+                    Height = deletedHeight,
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ef4444")),
+                    CornerRadius = new CornerRadius(0, 0, 2, 2),
+                    Margin = new Thickness(0, 1, 0, 0),
+                    VerticalAlignment = VerticalAlignment.Top,
+                    ToolTip = $"{dayData.Date:MM/dd}: -{dayData.Deleted} lines"
+                };
+                
+                dayContainer.Children.Add(addedBar);
+                dayContainer.Children.Add(deletedBar);
+                
+                // Add day label for first day of each week or based on zoom
+                int labelInterval = zoomLevel >= 5 ? 1 : (zoomLevel >= 3 ? 2 : 7);
+                if (dayData.Date.DayOfWeek == DayOfWeek.Monday || i % labelInterval == 0)
+                {
+                    var dayLabel = new TextBlock 
+                    { 
+                        Text = dayData.Date.ToString("MM/dd"),
+                        Foreground = Brushes.Gray,
+                        FontSize = zoomLevel >= 3 ? 10 : 8,
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                        Margin = new Thickness(0, 2, 0, 0)
+                    };
+                    dayContainer.Children.Add(dayLabel);
+                }
+                
+                Grid.SetColumn(dayContainer, i);
+                chartGrid.Children.Add(dayContainer);
+            }
+            
+            CodeLinesChartContainer.Children.Add(chartGrid);
         }
 
         private Brush GetLevelBrush(int level)

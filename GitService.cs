@@ -180,6 +180,111 @@ namespace GamePrince
         }
 
         /// <summary>
+        /// 获取每日代码行数变化（带缓存）
+        /// </summary>
+        public static Dictionary<DateTime, (int Added, int Deleted)> GetDailyCodeLines(string projectPath)
+        {
+            // 检查缓存
+            string cacheKey = $"codelines_{projectPath}";
+            if (TryGetCache(cacheKey, out var cached))
+            {
+                return (Dictionary<DateTime, (int Added, int Deleted)>)cached;
+            }
+
+            var result = new Dictionary<DateTime, (int Added, int Deleted)>();
+            
+            if (!Directory.Exists(Path.Combine(projectPath, ".git")))
+            {
+                LoggerService.Warning("GitService", $"目录不是Git仓库: {projectPath}");
+                return result;
+            }
+
+            try
+            {
+                // 使用 git log 获取每天的代码行数变化
+                ProcessStartInfo psi = new ProcessStartInfo
+                {
+                    FileName = "git",
+                    Arguments = "log --pretty=format:\"%ai\" --numstat --date=short",
+                    WorkingDirectory = projectPath,
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    StandardOutputEncoding = System.Text.Encoding.UTF8
+                };
+                psi.EnvironmentVariables["LANG"] = "zh_CN.UTF-8";
+
+                using (Process? process = Process.Start(psi))
+                {
+                    if (process != null)
+                    {
+                        string? line;
+                        DateTime currentDate = DateTime.MinValue;
+                        int dailyAdded = 0;
+                        int dailyDeleted = 0;
+
+                        while ((line = process.StandardOutput.ReadLine()) != null)
+                        {
+                            // 解析日期行 (ISO格式日期，如 2024-01-15)
+                            if (line.Length >= 10 && DateTime.TryParse(line.Substring(0, 10), out DateTime commitDate))
+                            {
+                                // 保存前一天的数据
+                                if (currentDate != DateTime.MinValue && currentDate != commitDate)
+                                {
+                                    if (!result.ContainsKey(currentDate))
+                                        result[currentDate] = (0, 0);
+                                    var (prevAdded, prevDeleted) = result[currentDate];
+                                    result[currentDate] = (prevAdded + dailyAdded, prevDeleted + dailyDeleted);
+                                    
+                                    // 重置计数器
+                                    dailyAdded = 0;
+                                    dailyDeleted = 0;
+                                }
+                                currentDate = commitDate;
+                            }
+                            else if (!string.IsNullOrWhiteSpace(line) && line.Contains("\t"))
+                            {
+                                // 解析 numstat 行: "100\t50\tfilename"
+                                var parts = line.Split('\t');
+                                if (parts.Length >= 2)
+                                {
+                                    if (int.TryParse(parts[0], out int added) && added > 0)
+                                        dailyAdded += added;
+                                    if (int.TryParse(parts[1], out int deleted) && deleted > 0)
+                                        dailyDeleted += deleted;
+                                }
+                            }
+                        }
+
+                        // 保存最后一天的数据
+                        if (currentDate != DateTime.MinValue)
+                        {
+                            if (!result.ContainsKey(currentDate))
+                                result[currentDate] = (0, 0);
+                            var (prevAdded, prevDeleted) = result[currentDate];
+                            result[currentDate] = (prevAdded + dailyAdded, prevDeleted + dailyDeleted);
+                        }
+                    }
+                    process.WaitForExit();
+                }
+
+                LoggerService.Info("GitService", $"成功获取 {result.Count} 天的代码行数数据");
+            }
+            catch (System.ComponentModel.Win32Exception ex)
+            {
+                LoggerService.Error("GitService", $"Git未安装或不在PATH中: {ex.Message}", ex);
+            }
+            catch (Exception ex)
+            {
+                LoggerService.Error("GitService", $"获取代码行数失败: {ex.Message}", ex);
+            }
+
+            // 存入缓存
+            SetCache(cacheKey, result);
+            return result;
+        }
+
+        /// <summary>
         /// 获取总提交数
         /// </summary>
         public static int GetTotalCommits(string projectPath)

@@ -37,7 +37,8 @@ namespace GamePrince
     /// </summary>
     public class ResourceStats
     {
-        public int Scripts { get; set; }       // .gd
+        public int Scripts { get; set; }       // .cs
+        public int GDScripts { get; set; }     // .gd
         public int Scenes { get; set; }        // .tscn
         public int Resources { get; set; }     // .tres
         public int Shaders { get; set; }        // .gdshader
@@ -47,7 +48,7 @@ namespace GamePrince
         public int Fonts { get; set; }          // .ttf, .otf
         public int Other { get; set; }
         
-        public int Total => Scripts + Scenes + Resources + Shaders + Extensions + Textures + Audio + Fonts + Other;
+        public int Total => Scripts + GDScripts + Scenes + Resources + Shaders + Extensions + Textures + Audio + Fonts + Other;
     }
 
     /// <summary>
@@ -309,6 +310,9 @@ namespace GamePrince
                     switch (ext)
                     {
                         case ".gd":
+                            stats.GDScripts++;
+                            break;
+                        case ".cs":
                             stats.Scripts++;
                             break;
                         case ".tscn":

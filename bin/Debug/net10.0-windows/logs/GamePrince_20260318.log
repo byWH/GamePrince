@@ -135,3 +135,107 @@
 [2026-03-18 14:01:47.588] [INFO] [GodotProjectService] 成功获取 0 个插件
 [2026-03-18 14:01:49.843] [INFO] [GodotProjectService] 成功获取 0 个插件
 [2026-03-18 14:01:50.938] [INFO] [App] ========== GamePrince 退出 (ExitCode: 0) ==========
+[2026-03-18 14:33:42.192] [INFO] [Logger] 日志服务已初始化
+[2026-03-18 14:33:42.257] [INFO] [Logger] 日志文件路径: D:\Data\EXE\bin\Debug\net10.0-windows\logs\GamePrince_20260318.log
+[2026-03-18 14:33:42.258] [INFO] [Logger] 日志级别: Debug
+[2026-03-18 14:33:42.260] [INFO] [App] ========== GamePrince 启动 ==========
+[2026-03-18 14:33:42.260] [INFO] [App] 版本: 1.0.0
+[2026-03-18 14:33:42.260] [INFO] [App] 启动时间: 2026-03-18 14:33:42
+[2026-03-18 14:33:42.261] [INFO] [App] .NET 版本: 10.0.3
+[2026-03-18 14:33:42.261] [INFO] [App] 操作系统: Microsoft Windows NT 10.0.26200.0
+[2026-03-18 14:33:42.307] [INFO] [App] 应用程序启动完成
+[2026-03-18 14:33:42.636] [INFO] [DataService] 成功加载 6 个任务
+[2026-03-18 14:33:42.639] [INFO] [DataService] 成功加载 2 个里程碑
+[2026-03-18 14:33:42.642] [INFO] [DataService] 成功加载 2 个发布信息
+[2026-03-18 14:33:56.965] [INFO] [GitService] 成功获取 50 条提交记录
+[2026-03-18 14:33:57.322] [INFO] [GitService] 成功获取 2 个分支
+[2026-03-18 14:33:57.419] [INFO] [GitService] 成功获取 150 条提交记录
+[2026-03-18 14:33:58.376] [INFO] [GitService] 成功获取 100 条提交记录
+[2026-03-18 14:33:59.958] [INFO] [GodotProjectService] 成功获取 0 个插件
+[2026-03-18 14:34:01.357] [INFO] [GodotProjectService] 成功构建项目树: Polar
+[2026-03-18 14:34:01.365] [INFO] [GodotProjectService] 检测到 Godot 项目: Polar
+[2026-03-18 14:34:01.422] [INFO] [GodotProjectService] 资源统计完成: 总计 7599 个文件
+[2026-03-18 14:34:22.986] [DEBUG] [GodotProjectService] 从缓存获取项目树
+[2026-03-18 14:34:22.992] [INFO] [GodotProjectService] 检测到 Godot 项目: Polar
+[2026-03-18 14:34:22.993] [DEBUG] [GodotProjectService] 从缓存获取资源统计
+[2026-03-18 14:34:46.197] [DEBUG] [GodotProjectService] 从缓存获取项目树
+[2026-03-18 14:34:46.204] [INFO] [GodotProjectService] 检测到 Godot 项目: Polar
+[2026-03-18 14:34:46.205] [DEBUG] [GodotProjectService] 从缓存获取资源统计
+[2026-03-18 14:37:14.945] [DEBUG] [GitService] 从缓存获取提交历史
+[2026-03-18 14:37:16.161] [INFO] [GodotProjectService] 成功获取 0 个插件
+[2026-03-18 14:37:18.088] [INFO] [GodotProjectService] 成功获取 0 个插件
+[2026-03-18 14:37:21.684] [DEBUG] [GitService] 从缓存获取提交历史
+[2026-03-18 14:37:36.778] [DEBUG] [GodotProjectService] 从缓存获取项目树
+[2026-03-18 14:37:36.793] [INFO] [GodotProjectService] 检测到 Godot 项目: Polar
+[2026-03-18 14:37:36.793] [DEBUG] [GodotProjectService] 从缓存获取资源统计
+[2026-03-18 14:37:38.914] [DEBUG] [GodotProjectService] 从缓存获取项目树
+[2026-03-18 14:37:38.922] [INFO] [GodotProjectService] 检测到 Godot 项目: Polar
+[2026-03-18 14:37:38.923] [DEBUG] [GodotProjectService] 从缓存获取资源统计
+[2026-03-18 14:38:01.631] [DEBUG] [GodotProjectService] 从缓存获取项目树
+[2026-03-18 14:38:01.639] [INFO] [GodotProjectService] 检测到 Godot 项目: Polar
+[2026-03-18 14:38:01.640] [DEBUG] [GodotProjectService] 从缓存获取资源统计
+[2026-03-18 14:38:16.927] [DEBUG] [GitService] 从缓存获取提交历史
+[2026-03-18 14:38:29.148] [DEBUG] [GodotProjectService] 从缓存获取项目树
+[2026-03-18 14:38:29.153] [INFO] [GodotProjectService] 检测到 Godot 项目: Polar
+[2026-03-18 14:38:29.154] [DEBUG] [GodotProjectService] 从缓存获取资源统计
+[2026-03-18 14:41:08.402] [INFO] [App] ========== GamePrince 退出 (ExitCode: 0) ==========
+[2026-03-18 14:54:03.982] [INFO] [Logger] 日志服务已初始化
+[2026-03-18 14:54:04.034] [INFO] [Logger] 日志文件路径: D:\Data\EXE\bin\Debug\net10.0-windows\logs\GamePrince_20260318.log
+[2026-03-18 14:54:04.036] [INFO] [Logger] 日志级别: Debug
+[2026-03-18 14:54:04.037] [INFO] [App] ========== GamePrince 启动 ==========
+[2026-03-18 14:54:04.037] [INFO] [App] 版本: 1.0.0
+[2026-03-18 14:54:04.038] [INFO] [App] 启动时间: 2026-03-18 14:54:04
+[2026-03-18 14:54:04.038] [INFO] [App] .NET 版本: 10.0.3
+[2026-03-18 14:54:04.039] [INFO] [App] 操作系统: Microsoft Windows NT 10.0.26200.0
+[2026-03-18 14:54:04.074] [INFO] [App] 应用程序启动完成
+[2026-03-18 14:54:04.342] [INFO] [DataService] 成功加载 6 个任务
+[2026-03-18 14:54:04.344] [INFO] [DataService] 成功加载 2 个里程碑
+[2026-03-18 14:54:04.347] [INFO] [DataService] 成功加载 2 个发布信息
+[2026-03-18 14:54:11.172] [INFO] [GitService] 成功获取 50 条提交记录
+[2026-03-18 14:54:11.475] [INFO] [GitService] 成功获取 2 个分支
+[2026-03-18 14:54:11.553] [INFO] [GitService] 成功获取 150 条提交记录
+[2026-03-18 14:54:13.089] [INFO] [GitService] 成功获取 84 天的代码行数数据
+[2026-03-18 14:54:35.065] [INFO] [GodotProjectService] 成功构建项目树: Polar
+[2026-03-18 14:54:35.077] [INFO] [GodotProjectService] 检测到 Godot 项目: Polar
+[2026-03-18 14:54:35.145] [INFO] [GodotProjectService] 资源统计完成: 总计 7599 个文件
+[2026-03-18 14:55:14.909] [INFO] [App] ========== GamePrince 退出 (ExitCode: 0) ==========
+[2026-03-18 14:58:45.103] [INFO] [Logger] 日志服务已初始化
+[2026-03-18 14:58:45.159] [INFO] [Logger] 日志文件路径: D:\Data\EXE\bin\Debug\net10.0-windows\logs\GamePrince_20260318.log
+[2026-03-18 14:58:45.160] [INFO] [Logger] 日志级别: Debug
+[2026-03-18 14:58:45.161] [INFO] [App] ========== GamePrince 启动 ==========
+[2026-03-18 14:58:45.161] [INFO] [App] 版本: 1.0.0
+[2026-03-18 14:58:45.161] [INFO] [App] 启动时间: 2026-03-18 14:58:45
+[2026-03-18 14:58:45.162] [INFO] [App] .NET 版本: 10.0.3
+[2026-03-18 14:58:45.162] [INFO] [App] 操作系统: Microsoft Windows NT 10.0.26200.0
+[2026-03-18 14:58:45.197] [INFO] [App] 应用程序启动完成
+[2026-03-18 14:58:45.467] [INFO] [DataService] 成功加载 6 个任务
+[2026-03-18 14:58:45.469] [INFO] [DataService] 成功加载 2 个里程碑
+[2026-03-18 14:58:45.471] [INFO] [DataService] 成功加载 2 个发布信息
+[2026-03-18 14:58:54.924] [INFO] [GitService] 成功获取 50 条提交记录
+[2026-03-18 14:58:55.232] [INFO] [GitService] 成功获取 2 个分支
+[2026-03-18 14:58:55.314] [INFO] [GitService] 成功获取 150 条提交记录
+[2026-03-18 14:58:56.799] [INFO] [GitService] 成功获取 84 天的代码行数数据
+[2026-03-18 15:03:44.948] [INFO] [App] ========== GamePrince 退出 (ExitCode: 0) ==========
+[2026-03-18 15:08:58.929] [INFO] [Logger] 日志服务已初始化
+[2026-03-18 15:08:58.982] [INFO] [Logger] 日志文件路径: D:\Data\EXE\bin\Debug\net10.0-windows\logs\GamePrince_20260318.log
+[2026-03-18 15:08:58.983] [INFO] [Logger] 日志级别: Debug
+[2026-03-18 15:08:58.984] [INFO] [App] ========== GamePrince 启动 ==========
+[2026-03-18 15:08:58.984] [INFO] [App] 版本: 1.0.0
+[2026-03-18 15:08:58.984] [INFO] [App] 启动时间: 2026-03-18 15:08:58
+[2026-03-18 15:08:58.985] [INFO] [App] .NET 版本: 10.0.3
+[2026-03-18 15:08:58.985] [INFO] [App] 操作系统: Microsoft Windows NT 10.0.26200.0
+[2026-03-18 15:08:59.023] [INFO] [App] 应用程序启动完成
+[2026-03-18 15:08:59.304] [INFO] [DataService] 成功加载 6 个任务
+[2026-03-18 15:08:59.307] [INFO] [DataService] 成功加载 2 个里程碑
+[2026-03-18 15:08:59.309] [INFO] [DataService] 成功加载 2 个发布信息
+[2026-03-18 15:09:04.516] [INFO] [GitService] 成功获取 50 条提交记录
+[2026-03-18 15:09:04.802] [INFO] [GitService] 成功获取 2 个分支
+[2026-03-18 15:09:04.879] [INFO] [GitService] 成功获取 150 条提交记录
+[2026-03-18 15:09:06.322] [INFO] [GitService] 成功获取 84 天的代码行数数据
+[2026-03-18 15:09:06.367] [INFO] [GodotProjectService] 成功构建项目树: Polar
+[2026-03-18 15:09:06.386] [INFO] [GodotProjectService] 检测到 Godot 项目: Polar
+[2026-03-18 15:09:06.432] [INFO] [GodotProjectService] 资源统计完成: 总计 7599 个文件
+[2026-03-18 15:09:06.492] [DEBUG] [GodotProjectService] 从缓存获取项目树
+[2026-03-18 15:09:06.509] [INFO] [GodotProjectService] 检测到 Godot 项目: Polar
+[2026-03-18 15:09:06.509] [DEBUG] [GodotProjectService] 从缓存获取资源统计
+[2026-03-18 15:12:40.881] [INFO] [App] ========== GamePrince 退出 (ExitCode: 0) ==========
