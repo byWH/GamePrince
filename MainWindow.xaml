@@ -139,16 +139,23 @@
                 <!-- 主导航 -->
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="15,0">
                     <StackPanel>
-                        <TextBlock Text="导航" Foreground="#475569" FontSize="11" FontWeight="SemiBold" Margin="15,10,0,10"/>
+                        <TextBlock Text="任务计划" Foreground="#475569" FontSize="11" FontWeight="SemiBold" Margin="15,10,0,10"/>
                         <Button x:Name="NavProjectOverview" Content="📊 项目概览" Style="{StaticResource NavButtonStyle}" Click="ShowProjectOverview"/>
                         <Button x:Name="NavTasks" Content="📋 任务管理" Style="{StaticResource NavButtonStyle}" Click="ShowTaskManagement"/>
                         <Button x:Name="NavPlan" Content="📅 开发计划" Style="{StaticResource NavButtonStyle}" Click="ShowPlan"/>
-                        <Button x:Name="NavHeatmap" Content="🔥 活跃热力图" Style="{StaticResource NavButtonStyle}" Click="ShowHeatmap"/>
-                        <Button x:Name="NavResources" Content="📁 资源浏览器" Style="{StaticResource NavButtonStyle}" Click="ShowResources"/>
                         <Button x:Name="NavCalendar" Content="🗓️ 日历视图" Style="{StaticResource NavButtonStyle}" Click="ShowCalendar"/>
                         <Button x:Name="NavWeeklyReport" Content="⏱️ 工时周报" Style="{StaticResource NavButtonStyle}" Click="ShowWeeklyReport"/>
-                        <Button x:Name="NavGitDiff" Content="🔀 版本对比" Style="{StaticResource NavButtonStyle}" Click="ShowGitDiff"/>
                         <Button x:Name="NavReleases" Content="🚀 发布管理" Style="{StaticResource NavButtonStyle}" Click="ShowReleases"/>
+                        <Border Height="1" Background="#1e293b" Margin="15,15,15,15"/>
+                        <TextBlock Text="Git 统计" Foreground="#475569" FontSize="11" FontWeight="SemiBold" Margin="15,10,0,10"/>
+                        <Button x:Name="NavContributors" Content="👥 贡献者" Style="{StaticResource NavButtonStyle}" Click="ShowContributors"/>
+                        <Button x:Name="NavTags" Content="🏷️ 标签管理" Style="{StaticResource NavButtonStyle}" Click="ShowTags"/>
+                        <Button x:Name="NavHealth" Content="💚 项目健康" Style="{StaticResource NavButtonStyle}" Click="ShowProjectHealth"/>
+                        <Button x:Name="NavHeatmap" Content="🔥 活跃热力图" Style="{StaticResource NavButtonStyle}" Click="ShowHeatmap"/>
+                        <Button x:Name="NavGitDiff" Content="🔀 版本对比" Style="{StaticResource NavButtonStyle}" Click="ShowGitDiff"/>
+                        <Border Height="1" Background="#1e293b" Margin="15,15,15,15"/>
+                        <TextBlock Text="项目统计" Foreground="#475569" FontSize="11" FontWeight="SemiBold" Margin="15,10,0,10"/>
+                        <Button x:Name="NavResources" Content="📁 资源浏览器" Style="{StaticResource NavButtonStyle}" Click="ShowResources"/>
                         <Button x:Name="NavPlugins" Content="🔌 插件管理" Style="{StaticResource NavButtonStyle}" Click="ShowPlugins"/>
                     </StackPanel>
                 </ScrollViewer>
@@ -836,6 +843,91 @@
                         </DockPanel>
                     </Border>
                 </Grid>
+            </Grid>
+            <!-- Contributors View -->
+            <Grid x:Name="ContributorsViewGrid" Grid.Row="1" Visibility="Collapsed">
+                <Border Style="{StaticResource GlassBorder}">
+                    <DockPanel>
+                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,25">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="👥" Foreground="#8b5cf6" FontSize="20" Margin="0,0,10,0"/>
+                                <TextBlock Text="贡献者统计" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <Button Content="🔄 刷新" Click="RefreshContributors" HorizontalAlignment="Right" Style="{StaticResource IconButton}" ToolTip="刷新"/>
+                        </DockPanel>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel x:Name="ContributorsContainer"/>
+                        </ScrollViewer>
+                    </DockPanel>
+                </Border>
+            </Grid>
+
+            <!-- Tags View -->
+            <Grid x:Name="TagsViewGrid" Grid.Row="1" Visibility="Collapsed">
+                <Border Style="{StaticResource GlassBorder}">
+                    <DockPanel>
+                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,25">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🏷️" Foreground="#8b5cf6" FontSize="20" Margin="0,0,10,0"/>
+                                <TextBlock Text="Git 标签" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <Button Content="🔄 刷新" Click="RefreshTags" HorizontalAlignment="Right" Style="{StaticResource IconButton}" ToolTip="刷新"/>
+                        </DockPanel>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel x:Name="TagsContainer"/>
+                        </ScrollViewer>
+                    </DockPanel>
+                </Border>
+            </Grid>
+
+            <!-- Project Health View -->
+            <Grid x:Name="HealthViewGrid" Grid.Row="1" Visibility="Collapsed">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <!-- Health Score Card -->
+                        <Border Style="{StaticResource GlassBorder}" Margin="0,0,0,20">
+                            <DockPanel>
+                                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,20">
+                                    <TextBlock Text="💚" Foreground="#10b981" FontSize="20" Margin="0,0,10,0"/>
+                                    <TextBlock Text="项目健康度" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                                </StackPanel>
+                                <Grid x:Name="HealthScoreContainer"/>
+                            </DockPanel>
+                        </Border>
+
+                        <!-- Metrics Cards -->
+                        <Grid Margin="0,0,0,20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource GlassBorder}" Margin="0,0,8,0">
+                                <StackPanel x:Name="ActivityCard"/>
+                            </Border>
+                            <Border Grid.Column="1" Style="{StaticResource GlassBorder}" Margin="8,0,0,0">
+                                <StackPanel x:Name="GrowthCard"/>
+                            </Border>
+                        </Grid>
+
+                        <Grid Margin="0,0,0,20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Style="{StaticResource GlassBorder}" Margin="0,0,8,0">
+                                <StackPanel x:Name="CollaborationCard"/>
+                            </Border>
+                            <Border Grid.Column="1" Style="{StaticResource GlassBorder}" Margin="8,0,0,0">
+                                <StackPanel x:Name="ConsistencyCard"/>
+                            </Border>
+                        </Grid>
+
+                        <!-- Weekly Summary -->
+                        <Border Style="{StaticResource GlassBorder}">
+                            <StackPanel x:Name="WeeklySummaryContainer"/>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
             </Grid>
         </Grid>
     </Grid>

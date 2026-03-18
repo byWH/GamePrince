@@ -235,6 +235,9 @@ namespace GamePrince
             NavGitDiff.Tag = activeButton == "GitDiff" ? "Active" : null;
             NavReleases.Tag = activeButton == "Releases" ? "Active" : null;
             NavPlugins.Tag = activeButton == "Plugins" ? "Active" : null;
+            NavContributors.Tag = activeButton == "Contributors" ? "Active" : null;
+            NavTags.Tag = activeButton == "Tags" ? "Active" : null;
+            NavHealth.Tag = activeButton == "Health" ? "Active" : null;
         }
 
         private void UpdateProjectOverview()
@@ -313,6 +316,9 @@ namespace GamePrince
             GitDiffViewGrid.Visibility = Visibility.Collapsed;
             ReleasesViewGrid.Visibility = Visibility.Collapsed;
             PluginsViewGrid.Visibility = Visibility.Collapsed;
+            ContributorsViewGrid.Visibility = Visibility.Collapsed;
+            TagsViewGrid.Visibility = Visibility.Collapsed;
+            HealthViewGrid.Visibility = Visibility.Collapsed;
             UpdateNavButtons("Plan");
             UpdateMilestoneView();
         }
@@ -372,6 +378,9 @@ namespace GamePrince
             GitDiffViewGrid.Visibility = Visibility.Collapsed;
             ReleasesViewGrid.Visibility = Visibility.Collapsed;
             PluginsViewGrid.Visibility = Visibility.Collapsed;
+            ContributorsViewGrid.Visibility = Visibility.Collapsed;
+            TagsViewGrid.Visibility = Visibility.Collapsed;
+            HealthViewGrid.Visibility = Visibility.Collapsed;
             UpdateNavButtons("Heatmap");
             PopulateHeatmap();
         }
@@ -394,6 +403,9 @@ namespace GamePrince
             GitDiffViewGrid.Visibility = Visibility.Collapsed;
             ReleasesViewGrid.Visibility = Visibility.Collapsed;
             PluginsViewGrid.Visibility = Visibility.Collapsed;
+            ContributorsViewGrid.Visibility = Visibility.Collapsed;
+            TagsViewGrid.Visibility = Visibility.Collapsed;
+            HealthViewGrid.Visibility = Visibility.Collapsed;
             UpdateNavButtons("Calendar");
             UpdateCalendarView();
         }
@@ -414,6 +426,9 @@ namespace GamePrince
             GitDiffViewGrid.Visibility = Visibility.Collapsed;
             ReleasesViewGrid.Visibility = Visibility.Collapsed;
             PluginsViewGrid.Visibility = Visibility.Collapsed;
+            ContributorsViewGrid.Visibility = Visibility.Collapsed;
+            TagsViewGrid.Visibility = Visibility.Collapsed;
+            HealthViewGrid.Visibility = Visibility.Collapsed;
             UpdateNavButtons("WeeklyReport");
             UpdateWeeklyReport();
         }
@@ -434,6 +449,9 @@ namespace GamePrince
             GitDiffViewGrid.Visibility = Visibility.Visible;
             ReleasesViewGrid.Visibility = Visibility.Collapsed;
             PluginsViewGrid.Visibility = Visibility.Collapsed;
+            ContributorsViewGrid.Visibility = Visibility.Collapsed;
+            TagsViewGrid.Visibility = Visibility.Collapsed;
+            HealthViewGrid.Visibility = Visibility.Collapsed;
             UpdateNavButtons("GitDiff");
             UpdateGitDiffView();
         }
@@ -894,6 +912,9 @@ namespace GamePrince
             GitDiffViewGrid.Visibility = Visibility.Collapsed;
             ReleasesViewGrid.Visibility = Visibility.Collapsed;
             PluginsViewGrid.Visibility = Visibility.Collapsed;
+            ContributorsViewGrid.Visibility = Visibility.Collapsed;
+            TagsViewGrid.Visibility = Visibility.Collapsed;
+            HealthViewGrid.Visibility = Visibility.Collapsed;
             UpdateNavButtons("Resources");
             UpdateResourceBrowser();
         }
@@ -2540,6 +2561,9 @@ namespace GamePrince
             GitDiffViewGrid.Visibility = Visibility.Collapsed;
             ReleasesViewGrid.Visibility = Visibility.Visible;
             PluginsViewGrid.Visibility = Visibility.Collapsed;
+            ContributorsViewGrid.Visibility = Visibility.Collapsed;
+            TagsViewGrid.Visibility = Visibility.Collapsed;
+            HealthViewGrid.Visibility = Visibility.Collapsed;
             UpdateNavButtons("Releases");
             UpdateReleasesView();
         }
@@ -2560,6 +2584,9 @@ namespace GamePrince
             GitDiffViewGrid.Visibility = Visibility.Collapsed;
             ReleasesViewGrid.Visibility = Visibility.Collapsed;
             PluginsViewGrid.Visibility = Visibility.Visible;
+            ContributorsViewGrid.Visibility = Visibility.Collapsed;
+            TagsViewGrid.Visibility = Visibility.Collapsed;
+            HealthViewGrid.Visibility = Visibility.Collapsed;
             UpdateNavButtons("Plugins");
             UpdatePluginsView();
         }
@@ -3155,6 +3182,443 @@ namespace GamePrince
                 DataService.SaveReleases(_releases);
                 UpdateReleasesView();
             }
+        }
+
+        // ============== Contributors View ==============
+        private void ShowContributors(object sender, RoutedEventArgs e)
+        {
+            TitleText.Text = "贡献者统计";
+            KanbanView.Visibility = Visibility.Collapsed;
+            ProjectOverviewView.Visibility = Visibility.Collapsed;
+            HeatmapView.Visibility = Visibility.Collapsed;
+            MilestoneView.Visibility = Visibility.Collapsed;
+            TaskListViewGrid.Visibility = Visibility.Collapsed;
+            CalendarViewGrid.Visibility = Visibility.Collapsed;
+            WeeklyReportViewGrid.Visibility = Visibility.Collapsed;
+            TaskManagementView.Visibility = Visibility.Collapsed;
+            TaskViewSwitcher.Visibility = Visibility.Collapsed;
+            ResourcesViewGrid.Visibility = Visibility.Collapsed;
+            GitDiffViewGrid.Visibility = Visibility.Collapsed;
+            ReleasesViewGrid.Visibility = Visibility.Collapsed;
+            PluginsViewGrid.Visibility = Visibility.Collapsed;
+            ContributorsViewGrid.Visibility = Visibility.Visible;
+            TagsViewGrid.Visibility = Visibility.Collapsed;
+            HealthViewGrid.Visibility = Visibility.Collapsed;
+            UpdateNavButtons("Contributors");
+            UpdateContributorsView();
+        }
+
+        private void RefreshContributors(object sender, RoutedEventArgs e)
+        {
+            GitService.ClearCache();
+            UpdateContributorsView();
+        }
+
+        private void UpdateContributorsView()
+        {
+            ContributorsContainer.Children.Clear();
+
+            if (string.IsNullOrEmpty(_currentProjectPath))
+            {
+                ContributorsContainer.Children.Add(new TextBlock
+                {
+                    Text = "请先选择项目目录",
+                    Foreground = Brushes.Gray,
+                    FontSize = 14,
+                    Margin = new Thickness(10)
+                });
+                return;
+            }
+
+            var contributors = GitService.GetContributors(_currentProjectPath);
+
+            if (contributors.Count == 0)
+            {
+                ContributorsContainer.Children.Add(new TextBlock
+                {
+                    Text = "暂无贡献者数据",
+                    Foreground = Brushes.Gray,
+                    FontSize = 14,
+                    Margin = new Thickness(10)
+                });
+                return;
+            }
+
+            // 统计摘要
+            var summaryBorder = new Border
+            {
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8b5cf6")),
+                CornerRadius = new CornerRadius(12),
+                Padding = new Thickness(20),
+                Margin = new Thickness(0, 0, 0, 20)
+            };
+            var summaryStack = new StackPanel();
+            summaryStack.Children.Add(new TextBlock { Text = "贡献者统计", Foreground = Brushes.White, FontSize = 18, FontWeight = FontWeights.Bold });
+            summaryStack.Children.Add(new TextBlock { Text = $"共 {contributors.Count} 位贡献者", Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ddd6fe")), FontSize = 14, Margin = new Thickness(0, 5, 0, 0) });
+            summaryBorder.Child = summaryStack;
+            ContributorsContainer.Children.Add(summaryBorder);
+
+            // 贡献者卡片
+            int rank = 1;
+            foreach (var contributor in contributors.Take(20))
+            {
+                var cardBorder = new Border
+                {
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e293b")),
+                    CornerRadius = new CornerRadius(8),
+                    Padding = new Thickness(20),
+                    Margin = new Thickness(0, 0, 0, 10)
+                };
+
+                var cardStack = new StackPanel();
+
+                // 排名和名称
+                var headerStack = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 10) };
+                string rankEmoji = rank switch
+                {
+                    1 => "🥇",
+                    2 => "🥈",
+                    3 => "🥉",
+                    _ => $"#{rank}"
+                };
+                headerStack.Children.Add(new TextBlock { Text = rankEmoji, FontSize = 20, Margin = new Thickness(0, 0, 10, 0) });
+                headerStack.Children.Add(new TextBlock { Text = contributor.Name, Foreground = Brushes.White, FontSize = 16, FontWeight = FontWeights.Bold });
+                cardStack.Children.Add(headerStack);
+
+                // 邮箱
+                cardStack.Children.Add(new TextBlock { Text = $"📧 {contributor.Email}", Foreground = Brushes.Gray, FontSize = 12, Margin = new Thickness(0, 0, 0, 10) });
+
+                // 提交数和代码行数
+                var statsStack = new StackPanel { Orientation = Orientation.Horizontal };
+                statsStack.Children.Add(new Border
+                {
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e3a5f")),
+                    CornerRadius = new CornerRadius(4),
+                    Padding = new Thickness(10, 5, 10, 5),
+                    Margin = new Thickness(0, 0, 10, 0)
+                });
+                ((Border)statsStack.Children[0]).Child = new TextBlock { Text = $"📝 {contributor.CommitCount} 次提交", Foreground = Brushes.Cyan, FontSize = 12 };
+
+                statsStack.Children.Add(new Border
+                {
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10b981")),
+                    CornerRadius = new CornerRadius(4),
+                    Padding = new Thickness(10, 5, 10, 5),
+                    Margin = new Thickness(0, 0, 10, 0)
+                });
+                ((Border)statsStack.Children[1]).Child = new TextBlock { Text = $"+{contributor.LinesAdded:N0} 行", Foreground = Brushes.White, FontSize = 12 };
+
+                statsStack.Children.Add(new Border
+                {
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ef4444")),
+                    CornerRadius = new CornerRadius(4),
+                    Padding = new Thickness(10, 5, 10, 5)
+                });
+                ((Border)statsStack.Children[2]).Child = new TextBlock { Text = $"-{contributor.LinesDeleted:N0} 行", Foreground = Brushes.White, FontSize = 12 };
+
+                cardStack.Children.Add(statsStack);
+
+                // 活跃时间分析
+                if (contributor.ActivityByHour.Count > 0)
+                {
+                    var peakHour = contributor.ActivityByHour.OrderByDescending(x => x.Value).First().Key;
+                    string timePeriod = peakHour switch
+                    {
+                        >= 6 and < 12 => "上午",
+                        >= 12 and < 14 => "中午",
+                        >= 14 and < 18 => "下午",
+                        >= 18 and < 22 => "晚上",
+                        _ => "深夜"
+                    };
+                    cardStack.Children.Add(new TextBlock { Text = $"🕐 活跃时间: {timePeriod} (约 {peakHour}:00)", Foreground = Brushes.Gray, FontSize = 11, Margin = new Thickness(0, 10, 0, 0) });
+                }
+
+                cardBorder.Child = cardStack;
+                ContributorsContainer.Children.Add(cardBorder);
+                rank++;
+            }
+        }
+
+        // ============== Tags View ==============
+        private void ShowTags(object sender, RoutedEventArgs e)
+        {
+            TitleText.Text = "标签管理";
+            KanbanView.Visibility = Visibility.Collapsed;
+            ProjectOverviewView.Visibility = Visibility.Collapsed;
+            HeatmapView.Visibility = Visibility.Collapsed;
+            MilestoneView.Visibility = Visibility.Collapsed;
+            TaskListViewGrid.Visibility = Visibility.Collapsed;
+            CalendarViewGrid.Visibility = Visibility.Collapsed;
+            WeeklyReportViewGrid.Visibility = Visibility.Collapsed;
+            TaskManagementView.Visibility = Visibility.Collapsed;
+            TaskViewSwitcher.Visibility = Visibility.Collapsed;
+            ResourcesViewGrid.Visibility = Visibility.Collapsed;
+            GitDiffViewGrid.Visibility = Visibility.Collapsed;
+            ReleasesViewGrid.Visibility = Visibility.Collapsed;
+            PluginsViewGrid.Visibility = Visibility.Collapsed;
+            ContributorsViewGrid.Visibility = Visibility.Collapsed;
+            TagsViewGrid.Visibility = Visibility.Visible;
+            HealthViewGrid.Visibility = Visibility.Collapsed;
+            UpdateNavButtons("Tags");
+            UpdateTagsView();
+        }
+
+        private void RefreshTags(object sender, RoutedEventArgs e)
+        {
+            GitService.ClearCache();
+            UpdateTagsView();
+        }
+
+        private void UpdateTagsView()
+        {
+            TagsContainer.Children.Clear();
+
+            if (string.IsNullOrEmpty(_currentProjectPath))
+            {
+                TagsContainer.Children.Add(new TextBlock
+                {
+                    Text = "请先选择项目目录",
+                    Foreground = Brushes.Gray,
+                    FontSize = 14,
+                    Margin = new Thickness(10)
+                });
+                return;
+            }
+
+            var tags = GitService.GetTags(_currentProjectPath);
+
+            if (tags.Count == 0)
+            {
+                TagsContainer.Children.Add(new TextBlock
+                {
+                    Text = "暂无 Git 标签\n\n使用 git tag 命令创建标签",
+                    Foreground = Brushes.Gray,
+                    FontSize = 14,
+                    Margin = new Thickness(10)
+                });
+                return;
+            }
+
+            // 统计摘要
+            var summaryBorder = new Border
+            {
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f59e0b")),
+                CornerRadius = new CornerRadius(12),
+                Padding = new Thickness(20),
+                Margin = new Thickness(0, 0, 0, 20)
+            };
+            var summaryStack = new StackPanel();
+            summaryStack.Children.Add(new TextBlock { Text = "版本标签", Foreground = Brushes.White, FontSize = 18, FontWeight = FontWeights.Bold });
+            summaryStack.Children.Add(new TextBlock { Text = $"共 {tags.Count} 个标签", Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#fef3c7")), FontSize = 14, Margin = new Thickness(0, 5, 0, 0) });
+            summaryBorder.Child = summaryStack;
+            TagsContainer.Children.Add(summaryBorder);
+
+            // 标签列表
+            foreach (var tag in tags)
+            {
+                var tagBorder = new Border
+                {
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e293b")),
+                    CornerRadius = new CornerRadius(8),
+                    Padding = new Thickness(20),
+                    Margin = new Thickness(0, 0, 0, 10),
+                    Cursor = System.Windows.Input.Cursors.Hand
+                };
+
+                var tagStack = new StackPanel();
+
+                // 标签名称
+                var nameStack = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 10) };
+                nameStack.Children.Add(new TextBlock { Text = "🏷️", FontSize = 20, Margin = new Thickness(0, 0, 10, 0) });
+                nameStack.Children.Add(new TextBlock { Text = tag.Name, Foreground = Brushes.White, FontSize = 16, FontWeight = FontWeights.Bold });
+                tagStack.Children.Add(nameStack);
+
+                // 提交哈希
+                if (!string.IsNullOrEmpty(tag.CommitHash))
+                {
+                    var hashBorder = new Border
+                    {
+                        Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e3a5f")),
+                        CornerRadius = new CornerRadius(4),
+                        Padding = new Thickness(8, 4, 8, 4),
+                        HorizontalAlignment = HorizontalAlignment.Left,
+                        Margin = new Thickness(0, 0, 0, 8)
+                    };
+                    hashBorder.Child = new TextBlock { Text = tag.CommitHash, Foreground = Brushes.Cyan, FontSize = 11, FontFamily = new FontFamily("Consolas") };
+                    tagStack.Children.Add(hashBorder);
+                }
+
+                // 日期和消息
+                if (tag.Date.HasValue)
+                {
+                    tagStack.Children.Add(new TextBlock { Text = $"📅 {tag.Date:yyyy-MM-dd}", Foreground = Brushes.Gray, FontSize = 12, Margin = new Thickness(0, 0, 0, 5) });
+                }
+
+                if (!string.IsNullOrEmpty(tag.Message))
+                {
+                    tagStack.Children.Add(new TextBlock { Text = tag.Message, Foreground = Brushes.LightGray, FontSize = 13, TextWrapping = TextWrapping.Wrap });
+                }
+
+                tagBorder.Child = tagStack;
+                TagsContainer.Children.Add(tagBorder);
+            }
+        }
+
+        // ============== Project Health View ==============
+        private void ShowProjectHealth(object sender, RoutedEventArgs e)
+        {
+            TitleText.Text = "项目健康";
+            KanbanView.Visibility = Visibility.Collapsed;
+            ProjectOverviewView.Visibility = Visibility.Collapsed;
+            HeatmapView.Visibility = Visibility.Collapsed;
+            MilestoneView.Visibility = Visibility.Collapsed;
+            TaskListViewGrid.Visibility = Visibility.Collapsed;
+            CalendarViewGrid.Visibility = Visibility.Collapsed;
+            WeeklyReportViewGrid.Visibility = Visibility.Collapsed;
+            TaskManagementView.Visibility = Visibility.Collapsed;
+            TaskViewSwitcher.Visibility = Visibility.Collapsed;
+            ResourcesViewGrid.Visibility = Visibility.Collapsed;
+            GitDiffViewGrid.Visibility = Visibility.Collapsed;
+            ReleasesViewGrid.Visibility = Visibility.Collapsed;
+            PluginsViewGrid.Visibility = Visibility.Collapsed;
+            ContributorsViewGrid.Visibility = Visibility.Collapsed;
+            TagsViewGrid.Visibility = Visibility.Collapsed;
+            HealthViewGrid.Visibility = Visibility.Visible;
+            UpdateNavButtons("Health");
+            UpdateHealthView();
+        }
+
+        private void UpdateHealthView()
+        {
+            if (string.IsNullOrEmpty(_currentProjectPath))
+            {
+                // 显示空状态
+                HealthScoreContainer.Children.Clear();
+                HealthScoreContainer.Children.Add(new TextBlock
+                {
+                    Text = "请先选择项目目录",
+                    Foreground = Brushes.Gray,
+                    FontSize = 14,
+                    Margin = new Thickness(10)
+                });
+                return;
+            }
+
+            var health = GitService.GetProjectHealth(_currentProjectPath);
+
+            // 健康得分卡片
+            HealthScoreContainer.Children.Clear();
+            var scoreBorder = new Border
+            {
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0f172a")),
+                CornerRadius = new CornerRadius(12),
+                Padding = new Thickness(30)
+            };
+            var scoreStack = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
+            
+            // 综合得分
+            double overallScore = (health.ActivityScore + health.GrowthScore + health.CollaborationScore + health.ConsistencyScore) / 4;
+            string healthEmoji = health.HealthLevel switch
+            {
+                "健康" => "😊",
+                "良好" => "🙂",
+                "一般" => "😐",
+                _ => "😟"
+            };
+            scoreStack.Children.Add(new TextBlock { Text = healthEmoji, FontSize = 48, HorizontalAlignment = HorizontalAlignment.Center });
+            scoreStack.Children.Add(new TextBlock { Text = $"{overallScore:F0}", Foreground = Brushes.White, FontSize = 48, FontWeight = FontWeights.Bold, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 10, 0, 0) });
+            scoreStack.Children.Add(new TextBlock { Text = health.HealthLevel, Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(health.HealthLevel == "健康" ? "#10b981" : health.HealthLevel == "良好" ? "#3b82f6" : health.HealthLevel == "一般" ? "#f59e0b" : "#ef4444")), FontSize = 18, FontWeight = FontWeights.Bold, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 5, 0, 0) });
+            scoreStack.Children.Add(new TextBlock { Text = "综合健康度", Foreground = Brushes.Gray, FontSize = 14, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 5, 0, 0) });
+            
+            // 进度条
+            var progressBorder = new Border { Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#334155")), Height = 8, CornerRadius = new CornerRadius(4), Margin = new Thickness(0, 15, 0, 0), Width = 200 };
+            var progressFill = new Border { Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString(health.HealthLevel == "健康" ? "#10b981" : health.HealthLevel == "良好" ? "#3b82f6" : health.HealthLevel == "一般" ? "#f59e0b" : "#ef4444")), CornerRadius = new CornerRadius(4), HorizontalAlignment = HorizontalAlignment.Left };
+            progressFill.Width = overallScore * 2;
+            progressBorder.Child = progressFill;
+            scoreStack.Children.Add(progressBorder);
+            
+            scoreBorder.Child = scoreStack;
+            HealthScoreContainer.Children.Add(scoreBorder);
+
+            // 活跃度卡片
+            UpdateMetricCard(ActivityCard, "活跃度", health.ActivityScore, "📡", "基于提交频率");
+
+            // 增长趋势卡片
+            UpdateMetricCard(GrowthCard, "增长趋势", health.GrowthScore, "📈", "代码净增长");
+
+            // 协作指数卡片
+            UpdateMetricCard(CollaborationCard, "协作指数", health.CollaborationScore, "👥", "贡献者分布");
+
+            // 一致性卡片
+            UpdateMetricCard(ConsistencyCard, "一致性", health.ConsistencyScore, "📊", "提交分布均衡度");
+
+            // 周报摘要
+            WeeklySummaryContainer.Children.Clear();
+            var summaryBorder = new Border
+            {
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e293b")),
+                CornerRadius = new CornerRadius(8),
+                Padding = new Thickness(20)
+            };
+            var summaryStack = new StackPanel();
+            summaryStack.Children.Add(new TextBlock { Text = "本周统计", Foreground = Brushes.White, FontSize = 16, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 0, 0, 15) });
+            
+            var statsGrid = new Grid();
+            statsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            statsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            statsGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            
+            // 提交数
+            var commitsCell = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
+            commitsCell.Children.Add(new TextBlock { Text = "📝", FontSize = 24, HorizontalAlignment = HorizontalAlignment.Center });
+            commitsCell.Children.Add(new TextBlock { Text = health.WeeklyCommits.ToString(), Foreground = Brushes.White, FontSize = 24, FontWeight = FontWeights.Bold, HorizontalAlignment = HorizontalAlignment.Center });
+            commitsCell.Children.Add(new TextBlock { Text = "次提交", Foreground = Brushes.Gray, FontSize = 12, HorizontalAlignment = HorizontalAlignment.Center });
+            statsGrid.Children.Add(commitsCell);
+            
+            // 新增行数
+            var additionsCell = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
+            additionsCell.Children.Add(new TextBlock { Text = "➕", FontSize = 24, HorizontalAlignment = HorizontalAlignment.Center });
+            additionsCell.Children.Add(new TextBlock { Text = $"+{health.WeeklyAdditions:N0}", Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10b981")), FontSize = 24, FontWeight = FontWeights.Bold, HorizontalAlignment = HorizontalAlignment.Center });
+            additionsCell.Children.Add(new TextBlock { Text = "行新增", Foreground = Brushes.Gray, FontSize = 12, HorizontalAlignment = HorizontalAlignment.Center });
+            statsGrid.Children.Add(additionsCell);
+            
+            // 删除行数
+            var deletionsCell = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
+            deletionsCell.Children.Add(new TextBlock { Text = "➖", FontSize = 24, HorizontalAlignment = HorizontalAlignment.Center });
+            deletionsCell.Children.Add(new TextBlock { Text = $"-{health.WeeklyDeletions:N0}", Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ef4444")), FontSize = 24, FontWeight = FontWeights.Bold, HorizontalAlignment = HorizontalAlignment.Center });
+            deletionsCell.Children.Add(new TextBlock { Text = "行删除", Foreground = Brushes.Gray, FontSize = 12, HorizontalAlignment = HorizontalAlignment.Center });
+            statsGrid.Children.Add(deletionsCell);
+            
+            summaryStack.Children.Add(statsGrid);
+            summaryBorder.Child = summaryStack;
+            WeeklySummaryContainer.Children.Add(summaryBorder);
+        }
+
+        private void UpdateMetricCard(StackPanel card, string title, double score, string icon, string description)
+        {
+            card.Children.Clear();
+            
+            string color = score switch
+            {
+                >= 80 => "#10b981",
+                >= 60 => "#3b82f6",
+                >= 40 => "#f59e0b",
+                _ => "#ef4444"
+            };
+            
+            string level = score switch
+            {
+                >= 80 => "优秀",
+                >= 60 => "良好",
+                >= 40 => "一般",
+                _ => "需关注"
+            };
+
+            card.Children.Add(new TextBlock { Text = icon, FontSize = 24, Margin = new Thickness(0, 0, 0, 10) });
+            card.Children.Add(new TextBlock { Text = title, Foreground = Brushes.White, FontSize = 16, FontWeight = FontWeights.Bold });
+            card.Children.Add(new TextBlock { Text = $"{score:F0}", Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(color)), FontSize = 32, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 10, 0, 5) });
+            card.Children.Add(new TextBlock { Text = level, Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(color)), FontSize = 14, FontWeight = FontWeights.SemiBold });
+            card.Children.Add(new TextBlock { Text = description, Foreground = Brushes.Gray, FontSize = 11, Margin = new Thickness(0, 5, 0, 0) });
         }
     }
 }

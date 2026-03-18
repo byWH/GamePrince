@@ -57,6 +57,48 @@ namespace GamePrince
         private static readonly object _cacheLock = new object();
 
         /// <summary>
+        /// 贡献者统计信息
+        /// </summary>
+        public class GitContributor
+        {
+            public string Name { get; set; } = "";
+            public string Email { get; set; } = "";
+            public int CommitCount { get; set; }
+            public int LinesAdded { get; set; }
+            public int LinesDeleted { get; set; }
+            public Dictionary<DayOfWeek, int> ActivityByDay { get; set; } = new();
+            public Dictionary<int, int> ActivityByHour { get; set; } = new();
+        }
+
+        /// <summary>
+        /// Git标签信息
+        /// </summary>
+        public class GitTag
+        {
+            public string Name { get; set; } = "";
+            public string CommitHash { get; set; } = "";
+            public DateTime? Date { get; set; }
+            public string Message { get; set; } = "";
+        }
+
+        /// <summary>
+        /// 项目健康度指标
+        /// </summary>
+        public class ProjectHealthMetrics
+        {
+            public double ActivityScore { get; set; }
+            public double GrowthScore { get; set; }
+            public double CollaborationScore { get; set; }
+            public double ConsistencyScore { get; set; }
+            public string HealthLevel { get; set; } = "";
+            public int TotalCommits { get; set; }
+            public int ActiveContributors { get; set; }
+            public int WeeklyCommits { get; set; }
+            public int WeeklyAdditions { get; set; }
+            public int WeeklyDeletions { get; set; }
+        }
+
+        /// <summary>
         /// 清除缓存
         /// </summary>
         public static void ClearCache()
@@ -718,11 +760,405 @@ namespace GamePrince
         }
 
         /// <summary>
-        /// 获取分支列表（用于分支选择下拉框）
+        /// 获取贡献者统计信息（带缓存）
         /// </summary>
-        public static List<string> GetBranchNames(string projectPath)
+        public static List<GitContributor> GetContributors(string projectPath)
         {
-            return GetBranches(projectPath).Select(b => b.Name).ToList();
+            // 检查缓存
+            string cacheKey = $"contributors_{projectPath}";
+            if (TryGetCache(cacheKey, out var cached))
+            {
+                return (List<GitContributor>)cached;
+            }
+
+            var contributors = new List<GitContributor>();
+            
+            if (!Directory.Exists(Path.Combine(projectPath, ".git")))
+            {
+                LoggerService.Warning("GitService", $"目录不是Git仓库: {projectPath}");
+                return contributors;
+            }
+
+            try
+            {
+                // 获取所有提交作者的统计信息
+                ProcessStartInfo psi = new ProcessStartInfo
+                {
+                    FileName = "git",
+                    Arguments = "log --pretty=format:\"%an|%ae\" --numstat",
+                    WorkingDirectory = projectPath,
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    StandardOutputEncoding = System.Text.Encoding.UTF8
+                };
+                psi.EnvironmentVariables["LANG"] = "zh_CN.UTF-8";
+
+                var authorData = new Dictionary<string, GitContributor>();
+                string currentAuthor = "";
+                string currentEmail = "";
+
+                using (Process? process = Process.Start(psi))
+                {
+                    if (process != null)
+                    {
+                        string? line;
+                        while ((line = process.StandardOutput.ReadLine()) != null)
+                        {
+                            if (string.IsNullOrWhiteSpace(line)) continue;
+                            
+                            // 检查是否是作者行（不包含制表符）
+                            if (!line.Contains('\t'))
+                            {
+                                var parts = line.Split('|');
+                                if (parts.Length >= 2)
+                                {
+                                    currentAuthor = parts[0];
+                                    currentEmail = parts[1];
+                                    
+                                    if (!authorData.ContainsKey(currentAuthor))
+                                    {
+                                        authorData[currentAuthor] = new GitContributor
+                                        {
+                                            Name = currentAuthor,
+                                            Email = currentEmail
+                                        };
+                                    }
+                                }
+                            }
+                            else if (currentAuthor != "" && line.Contains('\t'))
+                            {
+                                // 这是 numstat 行，包含代码行数
+                                var parts = line.Split('\t');
+                                if (parts.Length >= 2 && authorData.ContainsKey(currentAuthor))
+                                {
+                                    if (int.TryParse(parts[0], out int added) && added > 0)
+                                        authorData[currentAuthor].LinesAdded += added;
+                                    if (int.TryParse(parts[1], out int deleted) && deleted > 0)
+                                        authorData[currentAuthor].LinesDeleted += deleted;
+                                    authorData[currentAuthor].CommitCount++;
+                                }
+                            }
+                        }
+                        process.WaitForExit();
+                    }
+                }
+
+                // 获取提交按日期分布的信息
+                psi = new ProcessStartInfo
+                {
+                    FileName = "git",
+                    Arguments = "log --pretty=format:\"%an|%ai\" -n 500",
+                    WorkingDirectory = projectPath,
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    StandardOutputEncoding = System.Text.Encoding.UTF8
+                };
+                psi.EnvironmentVariables["LANG"] = "zh_CN.UTF-8";
+
+                using (Process? process = Process.Start(psi))
+                {
+                    if (process != null)
+                    {
+                        string? line;
+                        while ((line = process.StandardOutput.ReadLine()) != null)
+                        {
+                            if (string.IsNullOrWhiteSpace(line)) continue;
+                            var parts = line.Split('|');
+                            if (parts.Length >= 2)
+                            {
+                                string authorName = parts[0];
+                                if (authorData.ContainsKey(authorName) && DateTime.TryParse(parts[1], out DateTime date))
+                                {
+                                    // 按星期分布
+                                    var dayOfWeek = date.DayOfWeek;
+                                    if (!authorData[authorName].ActivityByDay.ContainsKey(dayOfWeek))
+                                        authorData[authorName].ActivityByDay[dayOfWeek] = 0;
+                                    authorData[authorName].ActivityByDay[dayOfWeek]++;
+                                    
+                                    // 按小时分布
+                                    int hour = date.Hour;
+                                    if (!authorData[authorName].ActivityByHour.ContainsKey(hour))
+                                        authorData[authorName].ActivityByHour[hour] = 0;
+                                    authorData[authorName].ActivityByHour[hour]++;
+                                }
+                            }
+                        }
+                        process.WaitForExit();
+                    }
+                }
+
+                contributors = authorData.Values.OrderByDescending(c => c.CommitCount).ToList();
+                LoggerService.Info("GitService", $"成功获取 {contributors.Count} 个贡献者");
+            }
+            catch (System.ComponentModel.Win32Exception ex)
+            {
+                LoggerService.Error("GitService", $"Git未安装或不在PATH中: {ex.Message}", ex);
+            }
+            catch (Exception ex)
+            {
+                LoggerService.Error("GitService", $"获取贡献者统计失败: {ex.Message}", ex);
+            }
+
+            // 存入缓存
+            SetCache(cacheKey, contributors);
+            return contributors;
+        }
+
+        /// <summary>
+        /// 获取 Git 标签列表（带缓存）
+        /// </summary>
+        public static List<GitTag> GetTags(string projectPath)
+        {
+            // 检查缓存
+            string cacheKey = $"tags_{projectPath}";
+            if (TryGetCache(cacheKey, out var cached))
+            {
+                return (List<GitTag>)cached;
+            }
+
+            var tags = new List<GitTag>();
+            
+            if (!Directory.Exists(Path.Combine(projectPath, ".git")))
+            {
+                LoggerService.Warning("GitService", $"目录不是Git仓库: {projectPath}");
+                return tags;
+            }
+
+            try
+            {
+                ProcessStartInfo psi = new ProcessStartInfo
+                {
+                    FileName = "git",
+                    Arguments = "tag -l --sort=-creatordate --format=\"%(refname:short)|%(creatordate:format:%Y-%m-%d)|%(objectname:short)|%(contents:subject)\"",
+                    WorkingDirectory = projectPath,
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    StandardOutputEncoding = System.Text.Encoding.UTF8
+                };
+                psi.EnvironmentVariables["LANG"] = "zh_CN.UTF-8";
+
+                using (Process? process = Process.Start(psi))
+                {
+                    if (process != null)
+                    {
+                        string? line;
+                        while ((line = process.StandardOutput.ReadLine()) != null)
+                        {
+                            if (string.IsNullOrWhiteSpace(line)) continue;
+                            var parts = line.Split('|');
+                            if (parts.Length >= 1)
+                            {
+                                var tag = new GitTag
+                                {
+                                    Name = parts[0]
+                                };
+                                
+                                if (parts.Length >= 2 && DateTime.TryParse(parts[1], out DateTime date))
+                                    tag.Date = date;
+                                
+                                if (parts.Length >= 3)
+                                    tag.CommitHash = parts[2];
+                                
+                                if (parts.Length >= 4)
+                                    tag.Message = parts[3];
+                                
+                                tags.Add(tag);
+                            }
+                        }
+                        process.WaitForExit();
+                    }
+                }
+
+                LoggerService.Info("GitService", $"成功获取 {tags.Count} 个标签");
+            }
+            catch (System.ComponentModel.Win32Exception ex)
+            {
+                LoggerService.Error("GitService", $"Git未安装或不在PATH中: {ex.Message}", ex);
+            }
+            catch (Exception ex)
+            {
+                LoggerService.Error("GitService", $"获取标签列表失败: {ex.Message}", ex);
+            }
+
+            // 存入缓存
+            SetCache(cacheKey, tags);
+            return tags;
+        }
+
+        /// <summary>
+        /// 获取项目健康度指标（带缓存）
+        /// </summary>
+        public static ProjectHealthMetrics GetProjectHealth(string projectPath)
+        {
+            // 检查缓存
+            string cacheKey = $"health_{projectPath}";
+            if (TryGetCache(cacheKey, out var cached))
+            {
+                return (ProjectHealthMetrics)cached;
+            }
+
+            var metrics = new ProjectHealthMetrics();
+            
+            if (!Directory.Exists(Path.Combine(projectPath, ".git")))
+            {
+                LoggerService.Warning("GitService", $"目录不是Git仓库: {projectPath}");
+                return metrics;
+            }
+
+            try
+            {
+                // 获取总提交数
+                metrics.TotalCommits = GetTotalCommits(projectPath);
+                
+                // 获取贡献者数量
+                var contributors = GetContributors(projectPath);
+                metrics.ActiveContributors = contributors.Count;
+
+                // 计算本周提交数
+                var weekAgo = DateTime.Now.AddDays(-7);
+                ProcessStartInfo psi = new ProcessStartInfo
+                {
+                    FileName = "git",
+                    Arguments = $"log --since=\"{weekAgo:yyyy-MM-dd}\" --pretty=format:\"%h\" --numstat",
+                    WorkingDirectory = projectPath,
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    StandardOutputEncoding = System.Text.Encoding.UTF8
+                };
+                psi.EnvironmentVariables["LANG"] = "zh_CN.UTF-8";
+
+                int weeklyCommits = 0;
+                int weeklyAdditions = 0;
+                int weeklyDeletions = 0;
+                var processedCommits = new HashSet<string>();
+
+                using (Process? process = Process.Start(psi))
+                {
+                    if (process != null)
+                    {
+                        string? line;
+                        while ((line = process.StandardOutput.ReadLine()) != null)
+                        {
+                            if (string.IsNullOrWhiteSpace(line)) continue;
+                            
+                            // 检查是否是提交行（不包含制表符）
+                            if (!line.Contains('\t') && line.Length >= 7)
+                            {
+                                string commitHash = line.Trim();
+                                if (!processedCommits.Contains(commitHash))
+                                {
+                                    processedCommits.Add(commitHash);
+                                    weeklyCommits++;
+                                }
+                            }
+                            else if (line.Contains('\t'))
+                            {
+                                var parts = line.Split('\t');
+                                if (parts.Length >= 2)
+                                {
+                                    if (int.TryParse(parts[0], out int added))
+                                        weeklyAdditions += added;
+                                    if (int.TryParse(parts[1], out int deleted))
+                                        weeklyDeletions += deleted;
+                                }
+                            }
+                        }
+                        process.WaitForExit();
+                    }
+                }
+
+                metrics.WeeklyCommits = weeklyCommits;
+                metrics.WeeklyAdditions = weeklyAdditions;
+                metrics.WeeklyDeletions = weeklyDeletions;
+
+                // 计算活跃度得分 (0-100)
+                // 基于每周提交数：0-5=低(0-40分), 6-15=中(40-70分), 16+=高(70-100分)
+                metrics.ActivityScore = weeklyCommits switch
+                {
+                    >= 20 => 100,
+                    >= 15 => 90,
+                    >= 10 => 75,
+                    >= 5 => 60,
+                    >= 3 => 45,
+                    >= 1 => 30,
+                    _ => 15
+                };
+
+                // 计算增长得分 (0-100)
+                // 基于代码净增长
+                int netChange = weeklyAdditions - weeklyDeletions;
+                metrics.GrowthScore = netChange switch
+                {
+                    > 500 => 100,
+                    > 300 => 85,
+                    > 100 => 70,
+                    > 0 => 55,
+                    > -100 => 45,
+                    > -300 => 30,
+                    _ => 20
+                };
+
+                // 计算协作得分 (0-100)
+                // 基于贡献者数量和提交分布
+                metrics.CollaborationScore = contributors.Count switch
+                {
+                    >= 10 => 100,
+                    >= 5 => 85,
+                    >= 3 => 70,
+                    >= 2 => 55,
+                    1 => 40,
+                    _ => 30
+                };
+
+                // 计算一致性得分 (0-100)
+                // 基于提交时间分布的规律性
+                if (contributors.Count > 0)
+                {
+                    var avgCommitsPerContributor = (double)metrics.TotalCommits / contributors.Count;
+                    double variance = contributors.Sum(c => Math.Pow(c.CommitCount - avgCommitsPerContributor, 2)) / contributors.Count;
+                    double stdDev = Math.Sqrt(variance);
+                    double coefficientOfVariation = avgCommitsPerContributor > 0 ? stdDev / avgCommitsPerContributor : 1;
+                    
+                    // CV 越低，一致性越高
+                    metrics.ConsistencyScore = coefficientOfVariation switch
+                    {
+                        < 0.3 => 100,
+                        < 0.5 => 85,
+                        < 0.7 => 70,
+                        < 1.0 => 55,
+                        < 1.5 => 40,
+                        _ => 25
+                    };
+                }
+                else
+                {
+                    metrics.ConsistencyScore = 50;
+                }
+
+                // 计算综合健康等级
+                double overallScore = (metrics.ActivityScore + metrics.GrowthScore + metrics.CollaborationScore + metrics.ConsistencyScore) / 4;
+                metrics.HealthLevel = overallScore switch
+                {
+                    >= 80 => "健康",
+                    >= 60 => "良好",
+                    >= 40 => "一般",
+                    _ => "需关注"
+                };
+
+                LoggerService.Info("GitService", $"项目健康度: {metrics.HealthLevel} ({overallScore:F1}分)");
+            }
+            catch (Exception ex)
+            {
+                LoggerService.Error("GitService", $"获取项目健康度失败: {ex.Message}", ex);
+            }
+
+            // 存入缓存
+            SetCache(cacheKey, metrics);
+            return metrics;
         }
 
         /// <summary>
