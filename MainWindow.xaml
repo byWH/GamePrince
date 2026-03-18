@@ -144,8 +144,11 @@
                         <Button x:Name="NavTasks" Content="📋 任务管理" Style="{StaticResource NavButtonStyle}" Click="ShowTaskManagement"/>
                         <Button x:Name="NavPlan" Content="📅 开发计划" Style="{StaticResource NavButtonStyle}" Click="ShowPlan"/>
                         <Button x:Name="NavHeatmap" Content="🔥 活跃热力图" Style="{StaticResource NavButtonStyle}" Click="ShowHeatmap"/>
+                        <Button x:Name="NavResources" Content="📁 资源浏览器" Style="{StaticResource NavButtonStyle}" Click="ShowResources"/>
                         <Button x:Name="NavCalendar" Content="🗓️ 日历视图" Style="{StaticResource NavButtonStyle}" Click="ShowCalendar"/>
                         <Button x:Name="NavWeeklyReport" Content="⏱️ 工时周报" Style="{StaticResource NavButtonStyle}" Click="ShowWeeklyReport"/>
+                        <Button x:Name="NavGitDiff" Content="🔀 版本对比" Style="{StaticResource NavButtonStyle}" Click="ShowGitDiff"/>
+                        <Button x:Name="NavReleases" Content="🚀 发布管理" Style="{StaticResource NavButtonStyle}" Click="ShowReleases"/>
                     </StackPanel>
                 </ScrollViewer>
             </DockPanel>
@@ -467,6 +470,205 @@
                         <StackPanel x:Name="WeeklyReportContainer"/>
                     </StackPanel>
                 </Border>
+            </Grid>
+
+            <!-- Git Diff/Compare View -->
+            <Grid x:Name="GitDiffViewGrid" Grid.Row="1" Visibility="Collapsed">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="350"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- Left: Branch/Commit Selection -->
+                <Border Grid.Column="0" Style="{StaticResource GlassBorder}" Margin="0,0,10,0">
+                    <DockPanel>
+                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,20">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🔀" Foreground="#8b5cf6" FontSize="20" Margin="0,0,10,0"/>
+                                <TextBlock Text="版本对比" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <Button Content="🔄" Click="RefreshGitDiff" HorizontalAlignment="Right" Style="{StaticResource IconButton}" ToolTip="刷新"/>
+                        </DockPanel>
+                        
+                        <!-- Compare Controls -->
+                        <StackPanel>
+                            <TextBlock Text="源分支/提交" Foreground="#64748b" FontSize="12" Margin="0,0,0,8"/>
+                            <ComboBox x:Name="FromBranchCombo" Width="300" Margin="0,0,0,20" Background="#1e293b" Foreground="White"/>
+                            
+                            <TextBlock Text="目标分支/提交" Foreground="#64748b" FontSize="12" Margin="0,0,0,8"/>
+                            <ComboBox x:Name="ToBranchCombo" Width="300" Margin="0,0,0,20" Background="#1e293b" Foreground="White"/>
+                            
+                            <Button Content="🔍 开始对比" Click="CompareCommits" Style="{StaticResource PrimaryButtonStyle}" Margin="0,10,0,0"/>
+                            
+                            <Border Height="1" Background="#1e293b" Margin="0,25,0,25"/>
+                            
+                            <!-- Branch List -->
+                            <TextBlock Text="可用分支" Foreground="#64748b" FontSize="12" Margin="0,0,0,10"/>
+                            <ScrollViewer MaxHeight="300" VerticalScrollBarVisibility="Auto">
+                                <StackPanel x:Name="BranchListContainer"/>
+                            </ScrollViewer>
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+                
+                <!-- Right: Diff Results -->
+                <Border Grid.Column="1" Style="{StaticResource GlassBorder}">
+                    <DockPanel>
+                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,20">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📊" Foreground="#8b5cf6" FontSize="20" Margin="0,0,10,0"/>
+                                <TextBlock Text="对比结果" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <StackPanel x:Name="DiffStatsPanel" Orientation="Horizontal" HorizontalAlignment="Right" Visibility="Collapsed">
+                                <Border Background="#10b981" CornerRadius="4" Padding="8,4" Margin="0,0,10,0">
+                                    <TextBlock x:Name="DiffAdditionsText" Text="+0" Foreground="White" FontSize="12"/>
+                                </Border>
+                                <Border Background="#ef4444" CornerRadius="4" Padding="8,4">
+                                    <TextBlock x:Name="DiffDeletionsText" Text="-0" Foreground="White" FontSize="12"/>
+                                </Border>
+                            </StackPanel>
+                        </DockPanel>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel x:Name="DiffResultsContainer"/>
+                        </ScrollViewer>
+                    </DockPanel>
+                </Border>
+            </Grid>
+
+            <!-- Releases Management View -->
+            <Grid x:Name="ReleasesViewGrid" Grid.Row="1" Visibility="Collapsed">
+                <Border Style="{StaticResource GlassBorder}">
+                    <DockPanel>
+                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,25">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🚀" Foreground="#8b5cf6" FontSize="20" Margin="0,0,10,0"/>
+                                <TextBlock Text="发布管理" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <Button Content="+ 新建版本" Click="AddRelease_Click" HorizontalAlignment="Right" Style="{StaticResource PrimaryButtonStyle}"/>
+                        </DockPanel>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel x:Name="ReleasesContainer"/>
+                        </ScrollViewer>
+                    </DockPanel>
+                </Border>
+            </Grid>
+
+            <!-- Resources Browser View -->
+            <Grid x:Name="ResourcesViewGrid" Grid.Row="1" Visibility="Collapsed">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="350"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- Left: Project Tree -->
+                <Border Grid.Column="0" Style="{StaticResource GlassBorder}" Margin="0,0,10,0">
+                    <DockPanel>
+                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,15">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📁" Foreground="#8b5cf6" FontSize="20" Margin="0,0,10,0"/>
+                                <TextBlock Text="项目结构" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <Button Content="🔄" Click="RefreshResourceTree" HorizontalAlignment="Right" Style="{StaticResource IconButton}" ToolTip="刷新"/>
+                        </DockPanel>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" x:Name="ProjectTreeScroll">
+                            <StackPanel x:Name="ProjectTreeContainer"/>
+                        </ScrollViewer>
+                    </DockPanel>
+                </Border>
+                
+                <!-- Right: Resource Stats & Details -->
+                <Grid Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <!-- Resource Stats Cards -->
+                    <Grid Grid.Row="0" Margin="0,0,0,15">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <Border Grid.Column="0" Style="{StaticResource GlassBorder}" Margin="0,0,5,0">
+                            <StackPanel>
+                                <TextBlock Text="📜" Foreground="#06b6d4" FontSize="16" Margin="0,0,0,5"/>
+                                <TextBlock x:Name="StatScripts" Text="0" Foreground="White" FontSize="24" FontWeight="Bold"/>
+                                <TextBlock Text="脚本 (.gd)" Foreground="#64748b" FontSize="11"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <Border Grid.Column="1" Style="{StaticResource GlassBorder}" Margin="5,0,5,0">
+                            <StackPanel>
+                                <TextBlock Text="🎬" Foreground="#f59e0b" FontSize="16" Margin="0,0,0,5"/>
+                                <TextBlock x:Name="StatScenes" Text="0" Foreground="White" FontSize="24" FontWeight="Bold"/>
+                                <TextBlock Text="场景 (.tscn)" Foreground="#64748b" FontSize="11"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <Border Grid.Column="2" Style="{StaticResource GlassBorder}" Margin="5,0,5,0">
+                            <StackPanel>
+                                <TextBlock Text="🖼️" Foreground="#10b981" FontSize="16" Margin="0,0,0,5"/>
+                                <TextBlock x:Name="StatTextures" Text="0" Foreground="White" FontSize="24" FontWeight="Bold"/>
+                                <TextBlock Text="纹理" Foreground="#64748b" FontSize="11"/>
+                            </StackPanel>
+                        </Border>
+                        
+                        <Border Grid.Column="3" Style="{StaticResource GlassBorder}" Margin="5,0,0,0">
+                            <StackPanel>
+                                <TextBlock Text="🎵" Foreground="#8b5cf6" FontSize="16" Margin="0,0,0,5"/>
+                                <TextBlock x:Name="StatAudio" Text="0" Foreground="White" FontSize="24" FontWeight="Bold"/>
+                                <TextBlock Text="音频" Foreground="#64748b" FontSize="11"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                    
+                    <!-- Godot Project Info & Detailed Stats -->
+                    <Grid Grid.Row="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <!-- Godot Project Info Banner -->
+                        <Border Grid.Row="0" x:Name="GodotProjectBanner" Style="{StaticResource GlassBorder}" Margin="0,0,0,15" Visibility="Collapsed">
+                            <DockPanel>
+                                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                                    <TextBlock Text="🎮" Foreground="#478cbf" FontSize="24" Margin="0,0,15,0" VerticalAlignment="Center"/>
+                                    <StackPanel>
+                                        <TextBlock x:Name="GodotProjectName" Text="Godot 项目" Foreground="White" FontSize="18" FontWeight="Bold"/>
+                                        <TextBlock x:Name="GodotProjectPath" Text="" Foreground="#64748b" FontSize="12"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <Border Background="#1e3a5f" CornerRadius="4" Padding="10,5" Margin="0,0,10,0">
+                                        <TextBlock x:Name="GodotMainScene" Text="主场景: -" Foreground="#06b6d4" FontSize="12"/>
+                                    </Border>
+                                    <Border Background="#1e3a5f" CornerRadius="4" Padding="10,5">
+                                        <TextBlock x:Name="GodotTotalResources" Text="总资源: 0" Foreground="#10b981" FontSize="12"/>
+                                    </Border>
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+                        
+                        <!-- Detailed Resource List -->
+                        <Border Grid.Row="1" Style="{StaticResource GlassBorder}">
+                            <DockPanel>
+                                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,15">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="📊" Foreground="#8b5cf6" FontSize="20" Margin="0,0,10,0"/>
+                                        <TextBlock Text="资源详情" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                                    </StackPanel>
+                                </DockPanel>
+                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                    <StackPanel x:Name="ResourceDetailsContainer"/>
+                                </ScrollViewer>
+                            </DockPanel>
+                        </Border>
+                    </Grid>
+                </Grid>
             </Grid>
         </Grid>
     </Grid>

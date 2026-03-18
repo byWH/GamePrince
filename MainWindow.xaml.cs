@@ -10,6 +10,7 @@ namespace GamePrince
     {
         private List<TaskItem> _tasks = new();
         private List<Milestone> _milestones = new();
+        private List<ReleaseInfo> _releases = new();
         private string _currentProjectPath = "";
         private System.Windows.Threading.DispatcherTimer _uiTimer;
         private DateTime _calendarCurrentMonth = DateTime.Now.Date;
@@ -19,6 +20,7 @@ namespace GamePrince
             InitializeComponent();
             _tasks = DataService.LoadTasks();
             _milestones = DataService.LoadMilestones();
+            _releases = DataService.LoadReleases();
             UpdateMilestoneFilter();
             UpdateKanban();
             PopulateHeatmap();
@@ -96,6 +98,10 @@ namespace GamePrince
             TaskListViewGrid.Visibility = Visibility.Collapsed;
             CalendarViewGrid.Visibility = Visibility.Collapsed;
             WeeklyReportViewGrid.Visibility = Visibility.Collapsed;
+            TaskManagementView.Visibility = Visibility.Collapsed;
+            ResourcesViewGrid.Visibility = Visibility.Collapsed;
+            GitDiffViewGrid.Visibility = Visibility.Collapsed;
+            ReleasesViewGrid.Visibility = Visibility.Collapsed;
             UpdateNavButtons("Kanban");
             UpdateKanban();
         }
@@ -111,9 +117,10 @@ namespace GamePrince
             CalendarViewGrid.Visibility = Visibility.Collapsed;
             WeeklyReportViewGrid.Visibility = Visibility.Collapsed;
             TaskManagementView.Visibility = Visibility.Collapsed;
-            KanbanView.Visibility = Visibility.Collapsed;
-            TaskListViewGrid.Visibility = Visibility.Collapsed;
             TaskViewSwitcher.Visibility = Visibility.Collapsed;
+            ResourcesViewGrid.Visibility = Visibility.Collapsed;
+            GitDiffViewGrid.Visibility = Visibility.Collapsed;
+            ReleasesViewGrid.Visibility = Visibility.Collapsed;
             UpdateNavButtons("ProjectOverview");
             UpdateProjectOverview();
         }
@@ -124,8 +131,11 @@ namespace GamePrince
             NavTasks.Tag = activeButton == "Tasks" ? "Active" : null;
             NavPlan.Tag = activeButton == "Plan" ? "Active" : null;
             NavHeatmap.Tag = activeButton == "Heatmap" ? "Active" : null;
+            NavResources.Tag = activeButton == "Resources" ? "Active" : null;
             NavCalendar.Tag = activeButton == "Calendar" ? "Active" : null;
             NavWeeklyReport.Tag = activeButton == "WeeklyReport" ? "Active" : null;
+            NavGitDiff.Tag = activeButton == "GitDiff" ? "Active" : null;
+            NavReleases.Tag = activeButton == "Releases" ? "Active" : null;
         }
 
         private void UpdateProjectOverview()
@@ -200,6 +210,9 @@ namespace GamePrince
             WeeklyReportViewGrid.Visibility = Visibility.Collapsed;
             TaskManagementView.Visibility = Visibility.Collapsed;
             TaskViewSwitcher.Visibility = Visibility.Collapsed;
+            ResourcesViewGrid.Visibility = Visibility.Collapsed;
+            GitDiffViewGrid.Visibility = Visibility.Collapsed;
+            ReleasesViewGrid.Visibility = Visibility.Collapsed;
             UpdateNavButtons("Plan");
             UpdateMilestoneView();
         }
@@ -215,6 +228,9 @@ namespace GamePrince
             MilestoneView.Visibility = Visibility.Collapsed;
             CalendarViewGrid.Visibility = Visibility.Collapsed;
             WeeklyReportViewGrid.Visibility = Visibility.Collapsed;
+            ResourcesViewGrid.Visibility = Visibility.Collapsed;
+            GitDiffViewGrid.Visibility = Visibility.Collapsed;
+            ReleasesViewGrid.Visibility = Visibility.Collapsed;
 
             UpdateNavButtons("Tasks");
 
@@ -249,6 +265,9 @@ namespace GamePrince
             WeeklyReportViewGrid.Visibility = Visibility.Collapsed;
             TaskManagementView.Visibility = Visibility.Collapsed;
             TaskViewSwitcher.Visibility = Visibility.Collapsed;
+            ResourcesViewGrid.Visibility = Visibility.Collapsed;
+            GitDiffViewGrid.Visibility = Visibility.Collapsed;
+            ReleasesViewGrid.Visibility = Visibility.Collapsed;
             UpdateNavButtons("Heatmap");
             PopulateHeatmap();
         }
@@ -267,6 +286,9 @@ namespace GamePrince
             WeeklyReportViewGrid.Visibility = Visibility.Collapsed;
             TaskManagementView.Visibility = Visibility.Collapsed;
             TaskViewSwitcher.Visibility = Visibility.Collapsed;
+            ResourcesViewGrid.Visibility = Visibility.Collapsed;
+            GitDiffViewGrid.Visibility = Visibility.Collapsed;
+            ReleasesViewGrid.Visibility = Visibility.Collapsed;
             UpdateNavButtons("Calendar");
             UpdateCalendarView();
         }
@@ -285,8 +307,429 @@ namespace GamePrince
             KanbanView.Visibility = Visibility.Collapsed;
             TaskListViewGrid.Visibility = Visibility.Collapsed;
             TaskViewSwitcher.Visibility = Visibility.Collapsed;
+            ResourcesViewGrid.Visibility = Visibility.Collapsed;
+            GitDiffViewGrid.Visibility = Visibility.Collapsed;
+            ReleasesViewGrid.Visibility = Visibility.Collapsed;
             UpdateNavButtons("WeeklyReport");
             UpdateWeeklyReport();
+        }
+
+        private void ShowGitDiff(object sender, RoutedEventArgs e)
+        {
+            TitleText.Text = "版本对比";
+            KanbanView.Visibility = Visibility.Collapsed;
+            ProjectOverviewView.Visibility = Visibility.Collapsed;
+            HeatmapView.Visibility = Visibility.Collapsed;
+            MilestoneView.Visibility = Visibility.Collapsed;
+            TaskListViewGrid.Visibility = Visibility.Collapsed;
+            CalendarViewGrid.Visibility = Visibility.Collapsed;
+            WeeklyReportViewGrid.Visibility = Visibility.Collapsed;
+            TaskManagementView.Visibility = Visibility.Collapsed;
+            TaskViewSwitcher.Visibility = Visibility.Collapsed;
+            ResourcesViewGrid.Visibility = Visibility.Collapsed;
+            GitDiffViewGrid.Visibility = Visibility.Visible;
+            ReleasesViewGrid.Visibility = Visibility.Collapsed;
+            UpdateNavButtons("GitDiff");
+            UpdateGitDiffView();
+        }
+
+        private void UpdateGitDiffView()
+        {
+            if (string.IsNullOrEmpty(_currentProjectPath)) return;
+            
+            // Load branches
+            var branches = GitService.GetBranches(_currentProjectPath);
+            var branchNames = branches.Select(b => b.Name).ToList();
+            
+            FromBranchCombo.ItemsSource = branchNames;
+            ToBranchCombo.ItemsSource = branchNames;
+            
+            if (branchNames.Count > 0)
+            {
+                FromBranchCombo.SelectedIndex = 0;
+                ToBranchCombo.SelectedIndex = branchNames.Count > 1 ? 1 : 0;
+            }
+            
+            // Update branch list
+            BranchListContainer.Children.Clear();
+            foreach (var branch in branches)
+            {
+                var branchBorder = new Border
+                {
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e293b")),
+                    CornerRadius = new CornerRadius(4),
+                    Padding = new Thickness(10, 8, 10, 8),
+                    Margin = new Thickness(0, 0, 0, 5),
+                    Cursor = System.Windows.Input.Cursors.Hand
+                };
+                
+                var branchStack = new StackPanel { Orientation = Orientation.Horizontal };
+                branchStack.Children.Add(new TextBlock 
+                { 
+                    Text = branch.IsCurrent ? "✓ " : "  ", 
+                    Foreground = branch.IsCurrent ? Brushes.Green : Brushes.Transparent, 
+                    FontSize = 12 
+                });
+                branchStack.Children.Add(new TextBlock 
+                { 
+                    Text = branch.IsCurrent ? $"🌿 {branch.Name}" : branch.Name, 
+                    Foreground = branch.IsCurrent ? Brushes.Cyan : Brushes.White, 
+                    FontSize = 13 
+                });
+                branchBorder.Child = branchStack;
+                
+                // Click to select
+                branchBorder.MouseLeftButtonDown += (s, ev) =>
+                {
+                    if (ToBranchCombo.SelectedItem?.ToString() != branch.Name)
+                        ToBranchCombo.SelectedItem = branch.Name;
+                    else
+                        FromBranchCombo.SelectedItem = branch.Name;
+                };
+                
+                BranchListContainer.Children.Add(branchBorder);
+            }
+        }
+
+        private void RefreshGitDiff(object sender, RoutedEventArgs e)
+        {
+            UpdateGitDiffView();
+        }
+
+        private void CompareCommits(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(_currentProjectPath)) return;
+            
+            string fromRef = FromBranchCombo.SelectedItem?.ToString() ?? "";
+            string toRef = ToBranchCombo.SelectedItem?.ToString() ?? "";
+            
+            if (string.IsNullOrEmpty(fromRef) || string.IsNullOrEmpty(toRef)) return;
+            
+            var result = GitService.CompareRefs(_currentProjectPath, fromRef, toRef);
+            
+            // Update stats
+            DiffStatsPanel.Visibility = Visibility.Visible;
+            DiffAdditionsText.Text = $"+{result.TotalAdditions}";
+            DiffDeletionsText.Text = $"-{result.TotalDeletions}";
+            
+            // Update results
+            DiffResultsContainer.Children.Clear();
+            
+            if (result.Changes.Count == 0)
+            {
+                DiffResultsContainer.Children.Add(new TextBlock 
+                { 
+                    Text = "两个分支之间没有差异", 
+                    Foreground = Brushes.Gray, 
+                    FontSize = 14,
+                    Margin = new Thickness(10)
+                });
+                return;
+            }
+            
+            foreach (var change in result.Changes)
+            {
+                var changeBorder = new Border
+                {
+                    Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e293b")),
+                    CornerRadius = new CornerRadius(4),
+                    Padding = new Thickness(12, 8, 12, 8),
+                    Margin = new Thickness(0, 0, 0, 5)
+                };
+                
+                var changeGrid = new Grid();
+                changeGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(60) });
+                changeGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                changeGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(80) });
+                
+                // Change type icon
+                string icon = change.ChangeType switch
+                {
+                    "Added" => "➕",
+                    "Modified" => "✏️",
+                    "Deleted" => "🗑️",
+                    "Renamed" => "📝",
+                    _ => "📄"
+                };
+                var iconColor = change.ChangeType switch
+                {
+                    "Added" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10b981")),
+                    "Modified" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f59e0b")),
+                    "Deleted" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ef4444")),
+                    _ => Brushes.Gray
+                };
+                
+                changeGrid.Children.Add(new TextBlock { Text = icon, FontSize = 14, VerticalAlignment = VerticalAlignment.Center });
+                
+                var fileText = new TextBlock 
+                { 
+                    Text = change.FilePath, 
+                    Foreground = Brushes.White, 
+                    FontSize = 13,
+                    TextTrimming = TextTrimming.CharacterEllipsis,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    Margin = new Thickness(10, 0, 0, 0)
+                };
+                Grid.SetColumn(fileText, 1);
+                changeGrid.Children.Add(fileText);
+                
+                var statsText = new TextBlock
+                {
+                    Text = change.ChangeType == "Added" ? $"+{change.LinesAdded}" : 
+                           change.ChangeType == "Deleted" ? $"-{change.LinesDeleted}" :
+                           $"+{change.LinesAdded} -{change.LinesDeleted}",
+                    Foreground = change.LinesAdded > 0 ? Brushes.Green : (change.LinesDeleted > 0 ? Brushes.Red : Brushes.Gray),
+                    FontSize = 12,
+                    TextAlignment = TextAlignment.Right,
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                Grid.SetColumn(statsText, 2);
+                changeGrid.Children.Add(statsText);
+                
+                changeBorder.Child = changeGrid;
+                DiffResultsContainer.Children.Add(changeBorder);
+            }
+        }
+
+        private void ShowResources(object sender, RoutedEventArgs e)
+        {
+            TitleText.Text = "资源浏览器";
+            KanbanView.Visibility = Visibility.Collapsed;
+            ProjectOverviewView.Visibility = Visibility.Collapsed;
+            HeatmapView.Visibility = Visibility.Collapsed;
+            MilestoneView.Visibility = Visibility.Collapsed;
+            TaskListViewGrid.Visibility = Visibility.Collapsed;
+            CalendarViewGrid.Visibility = Visibility.Collapsed;
+            WeeklyReportViewGrid.Visibility = Visibility.Collapsed;
+            TaskManagementView.Visibility = Visibility.Collapsed;
+            TaskViewSwitcher.Visibility = Visibility.Collapsed;
+            ResourcesViewGrid.Visibility = Visibility.Visible;
+            GitDiffViewGrid.Visibility = Visibility.Collapsed;
+            ReleasesViewGrid.Visibility = Visibility.Collapsed;
+            UpdateNavButtons("Resources");
+            UpdateResourceBrowser();
+        }
+
+        private void RefreshResourceTree(object sender, RoutedEventArgs e)
+        {
+            UpdateResourceBrowser();
+        }
+
+        private void UpdateResourceBrowser()
+        {
+            // Update project tree
+            ProjectTreeContainer.Children.Clear();
+            
+            if (!string.IsNullOrEmpty(_currentProjectPath))
+            {
+                var rootNode = GodotProjectService.GetProjectTree(_currentProjectPath, 3);
+                RenderProjectNode(rootNode, ProjectTreeContainer, 0);
+            }
+            else
+            {
+                var emptyText = new TextBlock { Text = "请先选择项目目录", Foreground = Brushes.Gray, FontSize = 14, Margin = new Thickness(10) };
+                ProjectTreeContainer.Children.Add(emptyText);
+            }
+            
+            // Update resource statistics
+            UpdateResourceStats();
+        }
+
+        private void RenderProjectNode(ProjectNode node, StackPanel parent, int depth)
+        {
+            // Create toggle button for directory
+            var nodeBorder = new Border
+            {
+                Margin = new Thickness(depth * 15, 2, 5, 2),
+                Padding = new Thickness(5, 3, 5, 3),
+                Background = Brushes.Transparent,
+                CornerRadius = new CornerRadius(4),
+                Cursor = System.Windows.Input.Cursors.Hand
+            };
+            
+            var nodeStack = new StackPanel { Orientation = Orientation.Horizontal };
+            
+            // Icon based on type
+            string icon = node.IsDirectory ? "📁" : GetFileTypeIcon(node.FileType);
+            var iconText = new TextBlock { Text = icon, FontSize = 13, Margin = new Thickness(0, 0, 6, 0), VerticalAlignment = VerticalAlignment.Center };
+            nodeStack.Children.Add(iconText);
+            
+            var nameText = new TextBlock { 
+                Text = node.Name, 
+                Foreground = node.IsDirectory ? Brushes.White : GetFileTypeBrush(node.FileType), 
+                FontSize = 13,
+                VerticalAlignment = VerticalAlignment.Center,
+                TextTrimming = TextTrimming.CharacterEllipsis
+            };
+            nodeStack.Children.Add(nameText);
+            
+            nodeBorder.Child = nodeStack;
+            
+            // Add children container if directory
+            StackPanel childrenContainer = null;
+            if (node.IsDirectory && node.Children.Count > 0)
+            {
+                childrenContainer = new StackPanel { Margin = new Thickness(0, 0, 0, 0) };
+                
+                // Add expand/collapse functionality
+                bool isExpanded = depth < 2; // Auto-expand first 2 levels
+                nodeBorder.Tag = isExpanded;
+                
+                nodeBorder.MouseLeftButtonDown += (s, e) =>
+                {
+                    bool currentState = (bool)((Border)s).Tag;
+                    ((Border)s).Tag = !currentState;
+                    childrenContainer.Visibility = currentState ? Visibility.Collapsed : Visibility.Visible;
+                };
+                
+                // Render children
+                foreach (var child in node.Children)
+                {
+                    RenderProjectNode(child, childrenContainer, depth + 1);
+                }
+                
+                nodeBorder.Tag = isExpanded;
+                childrenContainer.Visibility = isExpanded ? Visibility.Visible : Visibility.Collapsed;
+            }
+            
+            parent.Children.Add(nodeBorder);
+            
+            if (childrenContainer != null)
+            {
+                parent.Children.Add(childrenContainer);
+            }
+        }
+
+        private string GetFileTypeIcon(string extension)
+        {
+            return extension.ToLower() switch
+            {
+                ".gd" => "📜",
+                ".tscn" => "🎬",
+                ".tres" => "📦",
+                ".gdshader" or ".shader" => "🎨",
+                ".png" or ".jpg" or ".jpeg" or ".webp" or ".svg" => "🖼️",
+                ".ogg" or ".wav" or ".mp3" or ".flac" => "🎵",
+                ".ttf" or ".otf" or ".woff" => "🔤",
+                ".gdnlib" or ".gdext" => "🔌",
+                ".txt" or ".md" => "📝",
+                ".json" or ".yaml" or ".yml" => "📋",
+                _ => "📄"
+            };
+        }
+
+        private Brush GetFileTypeBrush(string extension)
+        {
+            return extension.ToLower() switch
+            {
+                ".gd" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#06b6d4")),
+                ".tscn" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f59e0b")),
+                ".tres" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10b981")),
+                ".gdshader" or ".shader" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ec4899")),
+                ".png" or ".jpg" or ".jpeg" or ".webp" or ".svg" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10b981")),
+                ".ogg" or ".wav" or ".mp3" or ".flac" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8b5cf6")),
+                ".ttf" or ".otf" or ".woff" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f97316")),
+                ".gdnlib" or ".gdext" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#06b6d4")),
+                _ => Brushes.LightGray
+            };
+        }
+
+        private void UpdateResourceStats()
+        {
+            // Detect Godot project
+            GodotProject godotProject = null;
+            if (!string.IsNullOrEmpty(_currentProjectPath))
+            {
+                godotProject = GodotProjectService.DetectProject(_currentProjectPath);
+            }
+            
+            // Update Godot project banner
+            if (godotProject != null && godotProject.IsValid)
+            {
+                GodotProjectBanner.Visibility = Visibility.Visible;
+                GodotProjectName.Text = $"🎮 {godotProject.Name}";
+                GodotProjectPath.Text = godotProject.Path;
+                GodotMainScene.Text = string.IsNullOrEmpty(godotProject.MainScene) ? "主场景: -" : $"主场景: {godotProject.MainScene}";
+            }
+            else
+            {
+                GodotProjectBanner.Visibility = Visibility.Collapsed;
+            }
+            
+            // Get resource stats
+            ResourceStats stats = new ResourceStats();
+            if (!string.IsNullOrEmpty(_currentProjectPath))
+            {
+                stats = GodotProjectService.GetResourceStats(_currentProjectPath);
+            }
+            
+            // Update stat cards
+            StatScripts.Text = stats.Scripts.ToString();
+            StatScenes.Text = stats.Scenes.ToString();
+            StatTextures.Text = stats.Textures.ToString();
+            StatAudio.Text = stats.Audio.ToString();
+            
+            // Update total resources in banner
+            if (godotProject != null && godotProject.IsValid)
+            {
+                GodotTotalResources.Text = $"总资源: {stats.Total}";
+            }
+            
+            // Update detailed resource list
+            ResourceDetailsContainer.Children.Clear();
+            
+            if (string.IsNullOrEmpty(_currentProjectPath))
+            {
+                ResourceDetailsContainer.Children.Add(new TextBlock 
+                { 
+                    Text = "请先选择一个项目目录", 
+                    Foreground = Brushes.Gray, 
+                    FontSize = 14,
+                    Margin = new Thickness(10)
+                });
+                return;
+            }
+            
+            // Create detailed stats
+            var details = new List<(string Name, string Icon, int Count, string Color)>
+            {
+                ("GDScript 脚本 (.gd)", "📜", stats.Scripts, "#06b6d4"),
+                ("场景文件 (.tscn)", "🎬", stats.Scenes, "#f59e0b"),
+                ("资源文件 (.tres)", "📦", stats.Resources, "#10b981"),
+                ("着色器 (.gdshader)", "🎨", stats.Shaders, "#ec4899"),
+                ("扩展库 (.gdnlib)", "🔌", stats.Extensions, "#06b6d4"),
+                ("纹理图片", "🖼️", stats.Textures, "#10b981"),
+                ("音频文件", "🎵", stats.Audio, "#8b5cf6"),
+                ("字体文件", "🔤", stats.Fonts, "#f97316"),
+                ("其他文件", "📄", stats.Other, "#64748b")
+            };
+            
+            foreach (var detail in details.Where(d => d.Count > 0))
+            {
+                var row = new DockPanel { Margin = new Thickness(0, 0, 0, 10) };
+                row.Children.Add(new TextBlock { Text = detail.Icon, FontSize = 16, Margin = new Thickness(0, 0, 10, 0), VerticalAlignment = VerticalAlignment.Center });
+                row.Children.Add(new TextBlock { Text = detail.Name, Foreground = Brushes.White, FontSize = 14, VerticalAlignment = VerticalAlignment.Center });
+                row.Children.Add(new TextBlock { 
+                    Text = detail.Count.ToString(), 
+                    Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(detail.Color)), 
+                    FontSize = 14, 
+                    FontWeight = FontWeights.Bold,
+                    HorizontalAlignment = HorizontalAlignment.Right,
+                    VerticalAlignment = VerticalAlignment.Center
+                });
+                ResourceDetailsContainer.Children.Add(row);
+            }
+            
+            if (stats.Total == 0)
+            {
+                ResourceDetailsContainer.Children.Add(new TextBlock 
+                { 
+                    Text = "未找到资源文件", 
+                    Foreground = Brushes.Gray, 
+                    FontSize = 14,
+                    Margin = new Thickness(10)
+                });
+            }
         }
 
         private void PrevMonth(object sender, RoutedEventArgs e)
@@ -1387,6 +1830,367 @@ namespace GamePrince
                 Padding = new Thickness(2),
                 Child = canvas
             };
+        }
+
+        // ============== Release Management ==============
+        private void ShowReleases(object sender, RoutedEventArgs e)
+        {
+            TitleText.Text = "发布管理";
+            KanbanView.Visibility = Visibility.Collapsed;
+            ProjectOverviewView.Visibility = Visibility.Collapsed;
+            HeatmapView.Visibility = Visibility.Collapsed;
+            MilestoneView.Visibility = Visibility.Collapsed;
+            TaskListViewGrid.Visibility = Visibility.Collapsed;
+            CalendarViewGrid.Visibility = Visibility.Collapsed;
+            WeeklyReportViewGrid.Visibility = Visibility.Collapsed;
+            TaskManagementView.Visibility = Visibility.Collapsed;
+            TaskViewSwitcher.Visibility = Visibility.Collapsed;
+            ResourcesViewGrid.Visibility = Visibility.Collapsed;
+            GitDiffViewGrid.Visibility = Visibility.Collapsed;
+            ReleasesViewGrid.Visibility = Visibility.Visible;
+            UpdateNavButtons("Releases");
+            UpdateReleasesView();
+        }
+
+        private void UpdateReleasesView()
+        {
+            ReleasesContainer.Children.Clear();
+            
+            if (_releases.Count == 0)
+            {
+                ReleasesContainer.Children.Add(new TextBlock
+                {
+                    Text = "暂无发布计划，点击\"新建版本\"创建第一个发布版本。",
+                    Foreground = Brushes.Gray,
+                    FontSize = 14,
+                    Margin = new Thickness(10)
+                });
+                return;
+            }
+            
+            foreach (var release in _releases)
+            {
+                ReleasesContainer.Children.Add(CreateReleaseCard(release));
+            }
+        }
+
+        private UIElement CreateReleaseCard(ReleaseInfo release)
+        {
+            var border = new Border
+            {
+                Style = (Style)FindResource("GlassBorder"),
+                Padding = new Thickness(20),
+                Margin = new Thickness(0, 0, 0, 15)
+            };
+            
+            var stack = new StackPanel();
+            
+            // Header
+            var header = new DockPanel { Margin = new Thickness(0, 0, 0, 15) };
+            
+            var versionBadge = new Border
+            {
+                Background = release.Status == "Released" ? 
+                    new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10b981")) :
+                    new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f59e0b")),
+                CornerRadius = new CornerRadius(4),
+                Padding = new Thickness(8, 4, 8, 4),
+                Margin = new Thickness(0, 0, 10, 0)
+            };
+            versionBadge.Child = new TextBlock
+            {
+                Text = release.Version,
+                Foreground = Brushes.White,
+                FontSize = 12,
+                FontWeight = FontWeights.Bold
+            };
+            
+            var statusBadge = new Border
+            {
+                Background = release.Status switch
+                {
+                    "Released" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10b981")),
+                    "InProgress" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#f59e0b")),
+                    _ => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#64748b"))
+                },
+                CornerRadius = new CornerRadius(4),
+                Padding = new Thickness(8, 4, 8, 4),
+                Margin = new Thickness(0, 0, 10, 0)
+            };
+            statusBadge.Child = new TextBlock
+            {
+                Text = release.Status switch { "Released" => "✅ 已发布", "InProgress" => "🔄 进行中", _ => "📋 规划中" },
+                Foreground = Brushes.White,
+                FontSize = 11
+            };
+            
+            header.Children.Add(statusBadge);
+            header.Children.Add(versionBadge);
+            
+            // Title
+            var titleText = new TextBlock
+            {
+                Text = release.Title,
+                Foreground = Brushes.White,
+                FontSize = 18,
+                FontWeight = FontWeights.Bold,
+                Margin = new Thickness(0, 0, 0, 10)
+            };
+            stack.Children.Add(header);
+            stack.Children.Add(titleText);
+            
+            // Description
+            if (!string.IsNullOrEmpty(release.Description))
+            {
+                var descText = new TextBlock
+                {
+                    Text = release.Description,
+                    Foreground = Brushes.Gray,
+                    FontSize = 13,
+                    TextWrapping = TextWrapping.Wrap,
+                    Margin = new Thickness(0, 0, 0, 10)
+                };
+                stack.Children.Add(descText);
+            }
+            
+            // Release date
+            if (!string.IsNullOrEmpty(release.ReleaseDate))
+            {
+                var dateText = new TextBlock
+                {
+                    Text = $"发布日期: {release.ReleaseDate}",
+                    Foreground = Brushes.Cyan,
+                    FontSize = 12,
+                    Margin = new Thickness(0, 0, 0, 15)
+                };
+                stack.Children.Add(dateText);
+            }
+            
+            // Checklist
+            if (release.Checklist.Count > 0)
+            {
+                var checklistLabel = new TextBlock
+                {
+                    Text = "发布检查清单",
+                    Foreground = Brushes.Gray,
+                    FontSize = 12,
+                    Margin = new Thickness(0, 0, 0, 10)
+                };
+                stack.Children.Add(checklistLabel);
+                
+                for (int i = 0; i < release.Checklist.Count; i++)
+                {
+                    var checkItem = new DockPanel { Margin = new Thickness(0, 0, 0, 8) };
+                    var checkBox = new CheckBox
+                    {
+                        IsChecked = i < release.ChecklistCompleted.Count && release.ChecklistCompleted[i],
+                        VerticalAlignment = VerticalAlignment.Center
+                    };
+                    int index = i;
+                    checkBox.Checked += (s, ev) =>
+                    {
+                        while (release.ChecklistCompleted.Count <= index) release.ChecklistCompleted.Add(false);
+                        release.ChecklistCompleted[index] = true;
+                        DataService.SaveReleases(_releases);
+                    };
+                    checkBox.Unchecked += (s, ev) =>
+                    {
+                        while (release.ChecklistCompleted.Count <= index) release.ChecklistCompleted.Add(false);
+                        release.ChecklistCompleted[index] = false;
+                        DataService.SaveReleases(_releases);
+                    };
+                    
+                    var itemText = new TextBlock
+                    {
+                        Text = release.Checklist[i],
+                        Foreground = (i < release.ChecklistCompleted.Count && release.ChecklistCompleted[i]) ? 
+                            Brushes.Gray : Brushes.White,
+                        FontSize = 13,
+                        VerticalAlignment = VerticalAlignment.Center,
+                        TextDecorations = (i < release.ChecklistCompleted.Count && release.ChecklistCompleted[i]) ? 
+                            TextDecorations.Strikethrough : null
+                    };
+                    
+                    checkItem.Children.Add(checkBox);
+                    checkItem.Children.Add(itemText);
+                    stack.Children.Add(checkItem);
+                }
+            }
+            
+            // Buttons
+            var btnPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 15, 0, 0) };
+            
+            var btnDelete = new Button
+            {
+                Content = "删除",
+                Padding = new Thickness(15, 8, 15, 8),
+                Background = Brushes.Transparent,
+                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ef4444")),
+                BorderThickness = new Thickness(0),
+                Cursor = System.Windows.Input.Cursors.Hand,
+                FontSize = 12
+            };
+            btnDelete.Click += (s, e) =>
+            {
+                var result = MessageBox.Show($"确定要删除版本 \"{release.Version}\" 吗？", "确认删除", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                if (result == MessageBoxResult.Yes)
+                {
+                    _releases.Remove(release);
+                    DataService.SaveReleases(_releases);
+                    UpdateReleasesView();
+                }
+            };
+            
+            var btnEdit = new Button
+            {
+                Content = "编辑",
+                Padding = new Thickness(15, 8, 15, 8),
+                Background = Brushes.Transparent,
+                Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#94a3b8")),
+                BorderThickness = new Thickness(0),
+                Cursor = System.Windows.Input.Cursors.Hand,
+                FontSize = 12,
+                Margin = new Thickness(0, 0, 10, 0)
+            };
+            btnEdit.Click += (s, e) => EditRelease(release);
+            
+            btnPanel.Children.Add(btnDelete);
+            btnPanel.Children.Add(btnEdit);
+            stack.Children.Add(btnPanel);
+            
+            border.Child = stack;
+            return border;
+        }
+
+        private void AddRelease_Click(object sender, RoutedEventArgs e)
+        {
+            var newRelease = new ReleaseInfo
+            {
+                Version = "1.0.0",
+                Title = "新版本发布",
+                Status = "Planning",
+                Checklist = new List<string> { "功能开发完成", "测试通过", "文档更新", "构建验证" },
+                ChecklistCompleted = new List<bool> { false, false, false, false }
+            };
+            
+            // Simple edit dialog using InputBox
+            var versionDialog = new Window
+            {
+                Title = "新建发布版本",
+                Width = 400,
+                Height = 620,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0f172a")),
+                ResizeMode = ResizeMode.NoResize
+            };
+            
+            var dialogStack = new StackPanel { Margin = new Thickness(20) };
+            
+            dialogStack.Children.Add(new TextBlock { Text = "版本号 (如 1.0.0)", Foreground = Brushes.Gray, FontSize = 12, Margin = new Thickness(0, 0, 0, 5) });
+            var versionInput = new TextBox { Text = newRelease.Version, Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e293b")), Foreground = Brushes.White, BorderThickness = new Thickness(0), Padding = new Thickness(10), Margin = new Thickness(0, 0, 0, 15) };
+            dialogStack.Children.Add(versionInput);
+            
+            dialogStack.Children.Add(new TextBlock { Text = "标题", Foreground = Brushes.Gray, FontSize = 12, Margin = new Thickness(0, 0, 0, 5) });
+            var titleInput = new TextBox { Text = newRelease.Title, Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e293b")), Foreground = Brushes.White, BorderThickness = new Thickness(0), Padding = new Thickness(10), Margin = new Thickness(0, 0, 0, 15) };
+            dialogStack.Children.Add(titleInput);
+            
+            dialogStack.Children.Add(new TextBlock { Text = "发布日期 (yyyy-MM-dd)", Foreground = Brushes.Gray, FontSize = 12, Margin = new Thickness(0, 0, 0, 5) });
+            var dateInput = new TextBox { Text = "", Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e293b")), Foreground = Brushes.White, BorderThickness = new Thickness(0), Padding = new Thickness(10), Margin = new Thickness(0, 0, 0, 15) };
+            dialogStack.Children.Add(dateInput);
+            
+            dialogStack.Children.Add(new TextBlock { Text = "状态", Foreground = Brushes.Gray, FontSize = 12, Margin = new Thickness(0, 0, 0, 5) });
+            var statusCombo = new ComboBox { Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e293b")), Foreground = Brushes.White, BorderThickness = new Thickness(0), Margin = new Thickness(0, 0, 0, 20) };
+            statusCombo.Items.Add("Planning");
+            statusCombo.Items.Add("InProgress");
+            statusCombo.Items.Add("Released");
+            statusCombo.SelectedIndex = 0;
+            dialogStack.Children.Add(statusCombo);
+            
+            var btnPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
+            var btnCancel = new Button { Content = "取消", Padding = new Thickness(20, 8, 20, 8), Background = Brushes.Transparent, Foreground = Brushes.Gray, BorderThickness = new Thickness(0), Margin = new Thickness(0, 0, 10, 0) };
+            btnCancel.Click += (s, ev) => versionDialog.Close();
+            var btnSave = new Button { Content = "保存", Padding = new Thickness(20, 8, 20, 8), Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8b5cf6")), Foreground = Brushes.White, BorderThickness = new Thickness(0) };
+            btnSave.Click += (s, ev) =>
+            {
+                newRelease.Version = versionInput.Text;
+                newRelease.Title = titleInput.Text;
+                newRelease.ReleaseDate = dateInput.Text;
+                newRelease.Status = statusCombo.SelectedItem?.ToString() ?? "Planning";
+                versionDialog.DialogResult = true;
+            };
+            btnPanel.Children.Add(btnCancel);
+            btnPanel.Children.Add(btnSave);
+            dialogStack.Children.Add(btnPanel);
+            
+            versionDialog.Content = dialogStack;
+            versionDialog.Owner = this;
+            
+            if (versionDialog.ShowDialog() == true)
+            {
+                _releases.Add(newRelease);
+                DataService.SaveReleases(_releases);
+                UpdateReleasesView();
+            }
+        }
+
+        private void EditRelease(ReleaseInfo release)
+        {
+            var editDialog = new Window
+            {
+                Title = $"编辑版本 {release.Version}",
+                Width = 400,
+                Height = 550,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#0f172a")),
+                ResizeMode = ResizeMode.NoResize
+            };
+            
+            var dialogStack = new StackPanel { Margin = new Thickness(20) };
+            
+            dialogStack.Children.Add(new TextBlock { Text = "版本号", Foreground = Brushes.Gray, FontSize = 12, Margin = new Thickness(0, 0, 0, 5) });
+            var versionInput = new TextBox { Text = release.Version, Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e293b")), Foreground = Brushes.White, BorderThickness = new Thickness(0), Padding = new Thickness(10), Margin = new Thickness(0, 0, 0, 15) };
+            dialogStack.Children.Add(versionInput);
+            
+            dialogStack.Children.Add(new TextBlock { Text = "标题", Foreground = Brushes.Gray, FontSize = 12, Margin = new Thickness(0, 0, 0, 5) });
+            var titleInput = new TextBox { Text = release.Title, Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e293b")), Foreground = Brushes.White, BorderThickness = new Thickness(0), Padding = new Thickness(10), Margin = new Thickness(0, 0, 0, 15) };
+            dialogStack.Children.Add(titleInput);
+            
+            dialogStack.Children.Add(new TextBlock { Text = "发布日期", Foreground = Brushes.Gray, FontSize = 12, Margin = new Thickness(0, 0, 0, 5) });
+            var dateInput = new TextBox { Text = release.ReleaseDate, Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e293b")), Foreground = Brushes.White, BorderThickness = new Thickness(0), Padding = new Thickness(10), Margin = new Thickness(0, 0, 0, 15) };
+            dialogStack.Children.Add(dateInput);
+            
+            dialogStack.Children.Add(new TextBlock { Text = "状态", Foreground = Brushes.Gray, FontSize = 12, Margin = new Thickness(0, 0, 0, 5) });
+            var statusCombo = new ComboBox { Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e293b")), Foreground = Brushes.White, BorderThickness = new Thickness(0), Margin = new Thickness(0, 0, 0, 20) };
+            statusCombo.Items.Add("Planning");
+            statusCombo.Items.Add("InProgress");
+            statusCombo.Items.Add("Released");
+            statusCombo.SelectedItem = release.Status;
+            dialogStack.Children.Add(statusCombo);
+            
+            var btnPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right };
+            var btnCancel = new Button { Content = "取消", Padding = new Thickness(20, 8, 20, 8), Background = Brushes.Transparent, Foreground = Brushes.Gray, BorderThickness = new Thickness(0), Margin = new Thickness(0, 0, 10, 0) };
+            btnCancel.Click += (s, ev) => editDialog.Close();
+            var btnSave = new Button { Content = "保存", Padding = new Thickness(20, 8, 20, 8), Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#8b5cf6")), Foreground = Brushes.White, BorderThickness = new Thickness(0) };
+            btnSave.Click += (s, ev) =>
+            {
+                release.Version = versionInput.Text;
+                release.Title = titleInput.Text;
+                release.ReleaseDate = dateInput.Text;
+                release.Status = statusCombo.SelectedItem?.ToString() ?? "Planning";
+                editDialog.DialogResult = true;
+            };
+            btnPanel.Children.Add(btnCancel);
+            btnPanel.Children.Add(btnSave);
+            dialogStack.Children.Add(btnPanel);
+            
+            editDialog.Content = dialogStack;
+            editDialog.Owner = this;
+            
+            if (editDialog.ShowDialog() == true)
+            {
+                DataService.SaveReleases(_releases);
+                UpdateReleasesView();
+            }
         }
     }
 }

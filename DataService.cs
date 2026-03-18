@@ -33,6 +33,18 @@ namespace GamePrince
         public bool IsCompleted { get; set; } = false;
     }
 
+    public class ReleaseInfo
+    {
+        public string Id { get; set; } = System.Guid.NewGuid().ToString();
+        public string Version { get; set; } = "";  // 语义化版本号
+        public string Title { get; set; } = "";
+        public string Description { get; set; } = "";
+        public string ReleaseDate { get; set; } = "";
+        public string Status { get; set; } = "Planning"; // Planning, InProgress, Released
+        public List<string> Checklist { get; set; } = new();
+        public List<bool> ChecklistCompleted { get; set; } = new();
+    }
+
     public static class DataService
     {
         private static readonly string FilePath = "tasks.json";
@@ -71,6 +83,23 @@ namespace GamePrince
         {
             string json = JsonSerializer.Serialize(milestones, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(MilestonesPath, json);
+        }
+
+        private static readonly string ReleasesPath = "releases.json";
+
+        public static List<ReleaseInfo> LoadReleases()
+        {
+            if (!File.Exists(ReleasesPath))
+                return new List<ReleaseInfo>();
+
+            string json = File.ReadAllText(ReleasesPath);
+            return JsonSerializer.Deserialize<List<ReleaseInfo>>(json) ?? new List<ReleaseInfo>();
+        }
+
+        public static void SaveReleases(List<ReleaseInfo> releases)
+        {
+            string json = JsonSerializer.Serialize(releases, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(ReleasesPath, json);
         }
     }
 }

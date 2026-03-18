@@ -1,0 +1,42 @@
+[
+  {
+    "Id": "a14d66d6-5f54-4f39-9fd6-47d62dabc503",
+    "Version": "1.0.0",
+    "Title": "\u65B0\u7248\u672C\u53D1\u5E03",
+    "Description": "",
+    "ReleaseDate": "\u554AF",
+    "Status": "InProgress",
+    "Checklist": [
+      "\u529F\u80FD\u5F00\u53D1\u5B8C\u6210",
+      "\u6D4B\u8BD5\u901A\u8FC7",
+      "\u6587\u6863\u66F4\u65B0",
+      "\u6784\u5EFA\u9A8C\u8BC1"
+    ],
+    "ChecklistCompleted": [
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  {
+    "Id": "b178ed5e-18dc-4813-861e-7fd4989a5c51",
+    "Version": "2.0.0",
+    "Title": "\u65B0\u7248\u672C\u53D1\u5E03",
+    "Description": "",
+    "ReleaseDate": "",
+    "Status": "Released",
+    "Checklist": [
+      "\u529F\u80FD\u5F00\u53D1\u5B8C\u6210",
+      "\u6D4B\u8BD5\u901A\u8FC7",
+      "\u6587\u6863\u66F4\u65B0",
+      "\u6784\u5EFA\u9A8C\u8BC1"
+    ],
+    "ChecklistCompleted": [
+      true,
+      false,
+      false,
+      false
+    ]
+  }
+]
