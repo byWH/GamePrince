@@ -125,7 +125,40 @@ namespace GamePrince
 
         public static int GetTotalCommits(string projectPath)
         {
-            return GetCommitHistory(projectPath).Count;
+            if (!Directory.Exists(Path.Combine(projectPath, ".git")))
+                return 0;
+
+            try
+            {
+                ProcessStartInfo psi = new ProcessStartInfo
+                {
+                    FileName = "git",
+                    Arguments = "rev-list --count HEAD",
+                    WorkingDirectory = projectPath,
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                using (Process? process = Process.Start(psi))
+                {
+                    if (process != null)
+                    {
+                        string? output = process.StandardOutput.ReadToEnd().Trim();
+                        process.WaitForExit();
+                        if (int.TryParse(output, out int count))
+                        {
+                            return count;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Git error in GetTotalCommits: {ex.Message}");
+            }
+
+            return 0;
         }
 
         public static Dictionary<string, int> GetFileTypeDistribution(string projectPath)

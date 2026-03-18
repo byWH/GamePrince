@@ -44,10 +44,23 @@ namespace GamePrince
         public int Extensions { get; set; }    // .gdnlib
         public int Textures { get; set; }      // .png, .jpg, .webp, .svg
         public int Audio { get; set; }         // .ogg, .wav, .mp3
-        public int Fonts { get; set; }         // .ttf, .otf
+        public int Fonts { get; set; }          // .ttf, .otf
         public int Other { get; set; }
         
         public int Total => Scripts + Scenes + Resources + Shaders + Extensions + Textures + Audio + Fonts + Other;
+    }
+
+    /// <summary>
+    /// Godot 插件信息
+    /// </summary>
+    public class GodotPluginInfo
+    {
+        public string Name { get; set; } = "";
+        public string Path { get; set; } = "";
+        public string Description { get; set; } = "";
+        public string Author { get; set; } = "";
+        public string Version { get; set; } = "";
+        public bool IsEnabled { get; set; } = true;
     }
 
     public static class GodotProjectService
@@ -340,6 +353,136 @@ namespace GamePrince
             }
 
             return distribution;
+        }
+
+        /// <summary>
+        /// 获取项目的插件列表
+        /// </summary>
+        /// <param name="projectPath">项目根目录</param>
+        /// <returns>插件信息列表</returns>
+        public static List<GodotPluginInfo> GetPlugins(string projectPath)
+        {
+            var plugins = new List<GodotPluginInfo>();
+
+            if (string.IsNullOrEmpty(projectPath) || !Directory.Exists(projectPath))
+                return plugins;
+
+            string pluginDir = Path.Combine(projectPath, "addons");
+            if (!Directory.Exists(pluginDir))
+                return plugins;
+
+            try
+            {
+                var addonDirs = Directory.GetDirectories(pluginDir);
+                foreach (var addonPath in addonDirs)
+                {
+                    string pluginName = Path.GetFileName(addonPath);
+                    var plugin = new GodotPluginInfo
+                    {
+                        Name = pluginName,
+                        Path = addonPath,
+                        IsEnabled = true
+                    };
+
+                    // 尝试读取 plugin.cfg 获取插件信息
+                    string pluginCfg = Path.Combine(addonPath, "plugin.cfg");
+                    if (File.Exists(pluginCfg))
+                    {
+                        try
+                        {
+                            var lines = File.ReadAllLines(pluginCfg);
+                            foreach (var line in lines)
+                            {
+                                if (line.StartsWith("name="))
+                                    plugin.Name = line.Substring(5).Trim('"');
+                                else if (line.StartsWith("description="))
+                                    plugin.Description = line.Substring(12).Trim('"');
+                                else if (line.StartsWith("author="))
+                                    plugin.Author = line.Substring(7).Trim('"');
+                                else if (line.StartsWith("version="))
+                                    plugin.Version = line.Substring(8).Trim('"');
+                            }
+                        }
+                        catch
+                        {
+                            // 解析失败，使用默认名称
+                        }
+                    }
+
+                    plugins.Add(plugin);
+                }
+            }
+            catch
+            {
+                // 忽略错误
+            }
+
+            return plugins;
+        }
+
+        /// <summary>
+        /// 尝试启动 Godot Editor
+        /// </summary>
+        /// <param name="projectPath">项目路径</param>
+        /// <returns>是否成功启动</returns>
+        public static bool OpenInEditor(string projectPath)
+        {
+            if (string.IsNullOrEmpty(projectPath) || !Directory.Exists(projectPath))
+                return false;
+
+            // 常见的 Godot 可执行文件位置
+            var godotExecutables = new[]
+            {
+                "godot",
+                "godot4",
+                "godot4.2",
+                "godot4.1",
+                "godot3",
+                "godot-editor",
+                @"C:\Godot\Godot.exe",
+                @"C:\Godot\godot.exe",
+                @"C:\Program Files\Godot\Godot.exe",
+                @"C:\Program Files (x86)\Godot\Godot.exe"
+            };
+
+            // 先检查项目目录是否有 Godot
+            string projectGodotExe = Path.Combine(projectPath, "godot.exe");
+            if (File.Exists(projectGodotExe))
+            {
+                try
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = projectGodotExe,
+                        Arguments = projectPath,
+                        UseShellExecute = true
+                    });
+                    return true;
+                }
+                catch { }
+            }
+
+            // 尝试在 PATH 中查找
+            foreach (var godotExe in godotExecutables)
+            {
+                try
+                {
+                    var startInfo = new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = godotExe,
+                        Arguments = projectPath,
+                        UseShellExecute = true
+                    };
+                    System.Diagnostics.Process.Start(startInfo);
+                    return true;
+                }
+                catch
+                {
+                    // 继续尝试下一个
+                }
+            }
+
+            return false;
         }
     }
 }

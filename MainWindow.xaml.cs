@@ -60,6 +60,7 @@ namespace GamePrince
             if (string.IsNullOrEmpty(_currentProjectPath)) return;
 
             var commits = GitService.GetCommitHistory(_currentProjectPath);
+            var totalCommits = GitService.GetTotalCommits(_currentProjectPath);
             var fileDist = GitService.GetFileTypeDistribution(_currentProjectPath);
             var branches = GitService.GetBranches(_currentProjectPath);
             int totalFiles = fileDist.Values.Sum();
@@ -68,7 +69,7 @@ namespace GamePrince
                 .Take(3)
                 .Select(kv => $"{kv.Key}: {kv.Value}");
 
-            StatsText.Text = $"提交总数: {commits.Count} | 文件总数: {totalFiles} ({string.Join(", ", topExtensions)})";
+            StatsText.Text = $"提交总数: {totalCommits} | 文件总数: {totalFiles} ({string.Join(", ", topExtensions)})";
 
             // 显示当前分支
             var currentBranch = branches.FirstOrDefault(b => b.IsCurrent);
@@ -102,6 +103,7 @@ namespace GamePrince
             ResourcesViewGrid.Visibility = Visibility.Collapsed;
             GitDiffViewGrid.Visibility = Visibility.Collapsed;
             ReleasesViewGrid.Visibility = Visibility.Collapsed;
+            PluginsViewGrid.Visibility = Visibility.Collapsed;
             UpdateNavButtons("Kanban");
             UpdateKanban();
         }
@@ -121,6 +123,7 @@ namespace GamePrince
             ResourcesViewGrid.Visibility = Visibility.Collapsed;
             GitDiffViewGrid.Visibility = Visibility.Collapsed;
             ReleasesViewGrid.Visibility = Visibility.Collapsed;
+            PluginsViewGrid.Visibility = Visibility.Collapsed;
             UpdateNavButtons("ProjectOverview");
             UpdateProjectOverview();
         }
@@ -136,6 +139,7 @@ namespace GamePrince
             NavWeeklyReport.Tag = activeButton == "WeeklyReport" ? "Active" : null;
             NavGitDiff.Tag = activeButton == "GitDiff" ? "Active" : null;
             NavReleases.Tag = activeButton == "Releases" ? "Active" : null;
+            NavPlugins.Tag = activeButton == "Plugins" ? "Active" : null;
         }
 
         private void UpdateProjectOverview()
@@ -150,10 +154,10 @@ namespace GamePrince
 
             if (!string.IsNullOrEmpty(_currentProjectPath))
             {
-                var commits = GitService.GetCommitHistory(_currentProjectPath);
+                var totalCommits = GitService.GetTotalCommits(_currentProjectPath);
                 var branches = GitService.GetBranches(_currentProjectPath);
                 var currentBranch = branches.FirstOrDefault(b => b.IsCurrent);
-                OverviewGitStats.Text = $"Git提交: {commits.Count} | 分支: {currentBranch?.Name ?? "-"}";
+                OverviewGitStats.Text = $"Git提交: {totalCommits} | 分支: {currentBranch?.Name ?? "-"}";
             }
             else
             {
@@ -213,6 +217,7 @@ namespace GamePrince
             ResourcesViewGrid.Visibility = Visibility.Collapsed;
             GitDiffViewGrid.Visibility = Visibility.Collapsed;
             ReleasesViewGrid.Visibility = Visibility.Collapsed;
+            PluginsViewGrid.Visibility = Visibility.Collapsed;
             UpdateNavButtons("Plan");
             UpdateMilestoneView();
         }
@@ -231,6 +236,7 @@ namespace GamePrince
             ResourcesViewGrid.Visibility = Visibility.Collapsed;
             GitDiffViewGrid.Visibility = Visibility.Collapsed;
             ReleasesViewGrid.Visibility = Visibility.Collapsed;
+            PluginsViewGrid.Visibility = Visibility.Collapsed;
 
             UpdateNavButtons("Tasks");
 
@@ -268,6 +274,7 @@ namespace GamePrince
             ResourcesViewGrid.Visibility = Visibility.Collapsed;
             GitDiffViewGrid.Visibility = Visibility.Collapsed;
             ReleasesViewGrid.Visibility = Visibility.Collapsed;
+            PluginsViewGrid.Visibility = Visibility.Collapsed;
             UpdateNavButtons("Heatmap");
             PopulateHeatmap();
         }
@@ -289,6 +296,7 @@ namespace GamePrince
             ResourcesViewGrid.Visibility = Visibility.Collapsed;
             GitDiffViewGrid.Visibility = Visibility.Collapsed;
             ReleasesViewGrid.Visibility = Visibility.Collapsed;
+            PluginsViewGrid.Visibility = Visibility.Collapsed;
             UpdateNavButtons("Calendar");
             UpdateCalendarView();
         }
@@ -304,12 +312,11 @@ namespace GamePrince
             CalendarViewGrid.Visibility = Visibility.Collapsed;
             WeeklyReportViewGrid.Visibility = Visibility.Visible;
             TaskManagementView.Visibility = Visibility.Collapsed;
-            KanbanView.Visibility = Visibility.Collapsed;
-            TaskListViewGrid.Visibility = Visibility.Collapsed;
             TaskViewSwitcher.Visibility = Visibility.Collapsed;
             ResourcesViewGrid.Visibility = Visibility.Collapsed;
             GitDiffViewGrid.Visibility = Visibility.Collapsed;
             ReleasesViewGrid.Visibility = Visibility.Collapsed;
+            PluginsViewGrid.Visibility = Visibility.Collapsed;
             UpdateNavButtons("WeeklyReport");
             UpdateWeeklyReport();
         }
@@ -329,6 +336,7 @@ namespace GamePrince
             ResourcesViewGrid.Visibility = Visibility.Collapsed;
             GitDiffViewGrid.Visibility = Visibility.Visible;
             ReleasesViewGrid.Visibility = Visibility.Collapsed;
+            PluginsViewGrid.Visibility = Visibility.Collapsed;
             UpdateNavButtons("GitDiff");
             UpdateGitDiffView();
         }
@@ -506,6 +514,7 @@ namespace GamePrince
             ResourcesViewGrid.Visibility = Visibility.Visible;
             GitDiffViewGrid.Visibility = Visibility.Collapsed;
             ReleasesViewGrid.Visibility = Visibility.Collapsed;
+            PluginsViewGrid.Visibility = Visibility.Collapsed;
             UpdateNavButtons("Resources");
             UpdateResourceBrowser();
         }
@@ -1848,8 +1857,229 @@ namespace GamePrince
             ResourcesViewGrid.Visibility = Visibility.Collapsed;
             GitDiffViewGrid.Visibility = Visibility.Collapsed;
             ReleasesViewGrid.Visibility = Visibility.Visible;
+            PluginsViewGrid.Visibility = Visibility.Collapsed;
             UpdateNavButtons("Releases");
             UpdateReleasesView();
+        }
+
+        private void ShowPlugins(object sender, RoutedEventArgs e)
+        {
+            TitleText.Text = "插件管理";
+            KanbanView.Visibility = Visibility.Collapsed;
+            ProjectOverviewView.Visibility = Visibility.Collapsed;
+            HeatmapView.Visibility = Visibility.Collapsed;
+            MilestoneView.Visibility = Visibility.Collapsed;
+            TaskListViewGrid.Visibility = Visibility.Collapsed;
+            CalendarViewGrid.Visibility = Visibility.Collapsed;
+            WeeklyReportViewGrid.Visibility = Visibility.Collapsed;
+            TaskManagementView.Visibility = Visibility.Collapsed;
+            TaskViewSwitcher.Visibility = Visibility.Collapsed;
+            ResourcesViewGrid.Visibility = Visibility.Collapsed;
+            GitDiffViewGrid.Visibility = Visibility.Collapsed;
+            ReleasesViewGrid.Visibility = Visibility.Collapsed;
+            PluginsViewGrid.Visibility = Visibility.Visible;
+            UpdateNavButtons("Plugins");
+            UpdatePluginsView();
+        }
+
+        private void RefreshPlugins(object sender, RoutedEventArgs e)
+        {
+            UpdatePluginsView();
+        }
+
+        private void UpdatePluginsView()
+        {
+            // Clear plugin list
+            PluginsContainer.Children.Clear();
+            PluginDetailsContainer.Children.Clear();
+
+            if (string.IsNullOrEmpty(_currentProjectPath))
+            {
+                PluginsContainer.Children.Add(new TextBlock
+                {
+                    Text = "请先选择项目目录",
+                    Foreground = Brushes.Gray,
+                    FontSize = 14,
+                    Margin = new Thickness(10)
+                });
+                return;
+            }
+
+            // Get plugins
+            var plugins = GodotProjectService.GetPlugins(_currentProjectPath);
+
+            if (plugins.Count == 0)
+            {
+                PluginsContainer.Children.Add(new TextBlock
+                {
+                    Text = "未找到插件 (addons 目录为空)",
+                    Foreground = Brushes.Gray,
+                    FontSize = 14,
+                    Margin = new Thickness(10)
+                });
+                
+                // Show empty details
+                PluginDetailsContainer.Children.Add(new TextBlock
+                {
+                    Text = "选择一个插件查看详情",
+                    Foreground = Brushes.Gray,
+                    FontSize = 14,
+                    Margin = new Thickness(10)
+                });
+                return;
+            }
+
+            // Add plugin cards
+            foreach (var plugin in plugins)
+            {
+                var pluginCard = CreatePluginCard(plugin);
+                PluginsContainer.Children.Add(pluginCard);
+            }
+
+            // Show first plugin details by default
+            if (plugins.Count > 0)
+            {
+                ShowPluginDetails(plugins[0]);
+            }
+        }
+
+        private UIElement CreatePluginCard(GodotPluginInfo plugin)
+        {
+            var border = new Border
+            {
+                Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#1e293b")),
+                CornerRadius = new CornerRadius(8),
+                Padding = new Thickness(15),
+                Margin = new Thickness(0, 0, 0, 10),
+                Cursor = System.Windows.Input.Cursors.Hand
+            };
+
+            var stack = new StackPanel();
+
+            var titleStack = new StackPanel { Orientation = Orientation.Horizontal };
+            titleStack.Children.Add(new TextBlock
+            {
+                Text = plugin.IsEnabled ? "✅" : "❌",
+                FontSize = 14,
+                Margin = new Thickness(0, 0, 8, 0)
+            });
+            titleStack.Children.Add(new TextBlock
+            {
+                Text = plugin.Name,
+                Foreground = Brushes.White,
+                FontSize = 14,
+                FontWeight = FontWeights.Bold
+            });
+            stack.Children.Add(titleStack);
+
+            if (!string.IsNullOrEmpty(plugin.Version))
+            {
+                stack.Children.Add(new TextBlock
+                {
+                    Text = $"版本: {plugin.Version}",
+                    Foreground = Brushes.Cyan,
+                    FontSize = 12,
+                    Margin = new Thickness(0, 5, 0, 0)
+                });
+            }
+
+            if (!string.IsNullOrEmpty(plugin.Author))
+            {
+                stack.Children.Add(new TextBlock
+                {
+                    Text = $"作者: {plugin.Author}",
+                    Foreground = Brushes.Gray,
+                    FontSize = 11,
+                    Margin = new Thickness(0, 2, 0, 0)
+                });
+            }
+
+            border.Child = stack;
+
+            // Click to show details
+            border.MouseLeftButtonDown += (s, e) => ShowPluginDetails(plugin);
+
+            return border;
+        }
+
+        private void ShowPluginDetails(GodotPluginInfo plugin)
+        {
+            PluginDetailsContainer.Children.Clear();
+
+            // Plugin name
+            var nameText = new TextBlock
+            {
+                Text = plugin.Name,
+                Foreground = Brushes.White,
+                FontSize = 20,
+                FontWeight = FontWeights.Bold,
+                Margin = new Thickness(0, 0, 0, 15)
+            };
+            PluginDetailsContainer.Children.Add(nameText);
+
+            // Status
+            var statusBorder = new Border
+            {
+                Background = plugin.IsEnabled ?
+                    new SolidColorBrush((Color)ColorConverter.ConvertFromString("#10b981")) :
+                    new SolidColorBrush((Color)ColorConverter.ConvertFromString("#ef4444")),
+                CornerRadius = new CornerRadius(4),
+                Padding = new Thickness(8, 4, 8, 4),
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Margin = new Thickness(0, 0, 0, 15)
+            };
+            statusBorder.Child = new TextBlock
+            {
+                Text = plugin.IsEnabled ? "✅ 已启用" : "❌ 已禁用",
+                Foreground = Brushes.White,
+                FontSize = 12
+            };
+            PluginDetailsContainer.Children.Add(statusBorder);
+
+            // Details grid
+            var details = new List<(string Label, string Value)>
+            {
+                ("路径", plugin.Path),
+                ("版本", string.IsNullOrEmpty(plugin.Version) ? "-" : plugin.Version),
+                ("作者", string.IsNullOrEmpty(plugin.Author) ? "-" : plugin.Author),
+                ("描述", string.IsNullOrEmpty(plugin.Description) ? "无描述" : plugin.Description)
+            };
+
+            foreach (var (label, value) in details)
+            {
+                var row = new DockPanel { Margin = new Thickness(0, 0, 0, 12) };
+                row.Children.Add(new TextBlock
+                {
+                    Text = label + ":",
+                    Foreground = Brushes.Gray,
+                    FontSize = 13,
+                    Width = 60
+                });
+                row.Children.Add(new TextBlock
+                {
+                    Text = value,
+                    Foreground = Brushes.White,
+                    FontSize = 13,
+                    TextWrapping = TextWrapping.Wrap
+                });
+                PluginDetailsContainer.Children.Add(row);
+            }
+        }
+
+        private void OpenGodotEditor(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(_currentProjectPath))
+            {
+                MessageBox.Show("请先选择一个项目目录", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            bool success = GodotProjectService.OpenInEditor(_currentProjectPath);
+            if (!success)
+            {
+                MessageBox.Show("无法找到 Godot 编辑器。\n\n请确保 Godot 已安装并添加到系统 PATH，或将 godot.exe 放在项目目录中。", 
+                    "启动失败", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         private void UpdateReleasesView()

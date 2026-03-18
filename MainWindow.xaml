@@ -149,6 +149,7 @@
                         <Button x:Name="NavWeeklyReport" Content="⏱️ 工时周报" Style="{StaticResource NavButtonStyle}" Click="ShowWeeklyReport"/>
                         <Button x:Name="NavGitDiff" Content="🔀 版本对比" Style="{StaticResource NavButtonStyle}" Click="ShowGitDiff"/>
                         <Button x:Name="NavReleases" Content="🚀 发布管理" Style="{StaticResource NavButtonStyle}" Click="ShowReleases"/>
+                        <Button x:Name="NavPlugins" Content="🔌 插件管理" Style="{StaticResource NavButtonStyle}" Click="ShowPlugins"/>
                     </StackPanel>
                 </ScrollViewer>
             </DockPanel>
@@ -668,6 +669,65 @@
                             </DockPanel>
                         </Border>
                     </Grid>
+                </Grid>
+            </Grid>
+            <!-- Plugins View -->
+            <Grid x:Name="PluginsViewGrid" Grid.Row="1" Visibility="Collapsed">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="350"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- Plugin List -->
+                <Border Grid.Column="0" Style="{StaticResource GlassBorder}" Margin="0,0,10,0">
+                    <DockPanel>
+                        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,15">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🔌" Foreground="#8b5cf6" FontSize="20" Margin="0,0,10,0"/>
+                                <TextBlock Text="插件列表" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                            </StackPanel>
+                            <Button Content="🔄" Click="RefreshPlugins" HorizontalAlignment="Right" Style="{StaticResource IconButton}" ToolTip="刷新"/>
+                        </DockPanel>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel x:Name="PluginsContainer"/>
+                        </ScrollViewer>
+                    </DockPanel>
+                </Border>
+                
+                <!-- Plugin Details & Editor Launch -->
+                <Grid Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    
+                    <!-- Godot Editor Launch Button -->
+                    <Border Grid.Row="0" Style="{StaticResource GlassBorder}" Margin="0,0,0,15">
+                        <DockPanel>
+                            <StackPanel>
+                                <TextBlock Text="🎮 Godot Editor" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                                <TextBlock Text="启动 Godot 编辑器打开当前项目" Foreground="#64748b" FontSize="12" Margin="0,5,0,0"/>
+                            </StackPanel>
+                            <Button x:Name="BtnOpenEditor" Content="🚀 启动编辑器" Click="OpenGodotEditor" 
+                                    Style="{StaticResource PrimaryButtonStyle}" HorizontalAlignment="Right" 
+                                    VerticalAlignment="Center" Padding="15,10"/>
+                        </DockPanel>
+                    </Border>
+                    
+                    <!-- Plugin Details -->
+                    <Border Grid.Row="1" Style="{StaticResource GlassBorder}">
+                        <DockPanel>
+                            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,15">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="📋" Foreground="#8b5cf6" FontSize="20" Margin="0,0,10,0"/>
+                                    <TextBlock Text="插件详情" Foreground="White" FontSize="18" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </DockPanel>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel x:Name="PluginDetailsContainer"/>
+                            </ScrollViewer>
+                        </DockPanel>
+                    </Border>
                 </Grid>
             </Grid>
         </Grid>
